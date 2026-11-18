@@ -1,0 +1,323 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { StatusBanner } from "@/components/ui/status-banner";
+import { apiFetch } from "@/lib/client-api";
+import { parseAmount } from "@/lib/parse-amount";
+import { useNumericInputMode } from "@/lib/use-numeric-input-mode";
+
+type BaseUnit = "G" | "ML" | "EA";
+
+type PurchaseUnit = "G" | "KG" | "ML" | "L" | "EA";
+
+type Ingredient = {
+  id: string;
+  name: string;
+  baseUnit: BaseUnit;
+  purchaseQty: number;
+  purchasePrice: number;
+  taxType: "TAXABLE" | "EXEMPT";
+  currentUnitCost: number;
+  yieldRate: number;
+  effectiveUnitCost: number;
+};
+
+const UNIT_LABEL: Record<BaseUnit, string> = { G: "g", ML: "ml", EA: "개" };
+
+const PURCHASE_UNITS: Array<{ value: PurchaseUnit; label: string; base: BaseUnit }> = [
+  { value: "KG", label: "kg", base: "G" },
+  { value: "G", label: "g", base: "G" },
+  { value: "L", label: "L", base: "ML" },
+  { value: "ML", label: "ml", base: "ML" },
+  { value: "EA", label: "개", base: "EA" },
+];
+
+const formatUnitCost = (v: number) =>
+  v.toLocaleString("ko-KR", { maximumFractionDigits: v < 100 ? 2 : 0 });
+
+/** 5000g → "5kg", 18000ml → "18L", otherwise base unit. */
+function formatPurchaseQty(qty: number, unit: BaseUnit) {
+  if (unit !== "EA" && qty >= 1000 && qty % 100 === 0) {
+    return `${(qty / 1000).toLocaleString("ko-KR")}${unit === "G" ? "kg" : "L"}`;
+  }
+
+  return `${qty.toLocaleString("ko-KR")}${UNIT_LABEL[unit]}`;
+}
+
+export default function IngredientsPage() {
+  const inputModes = useNumericInputMode();
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<Ingredient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [purchaseQty, setPurchaseQty] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [purchaseUnit, setPurchaseUnit] = useState<PurchaseUnit>("KG");
+  const [yieldPercent, setYieldPercent] = useState("");
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const result = await apiFetch<Ingredient[]>("/api/v1/ingredients");
+
+    setLoading(false);
+
+    if (!result.ok) {
+      setError(result.status === 401 ? "로그인이 필요합니다." : result.message);
+      setItems([]);
+
+      return;
+    }
+
+    setItems(result.data);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const qtyValue = parseAmount(purchaseQty);
+  const priceValue = parseAmount(purchasePrice);
+  const canSubmit = !busy && name.trim() !== "" && (qtyValue ?? 0) > 0 && (priceValue ?? -1) >= 0;
+
+  async function create(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (!canSubmit) return;
+
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+
+    const unit = PURCHASE_UNITS.find((u) => u.value === purchaseUnit)!;
+    const yieldValue = parseAmount(yieldPercent);
+
+    const result = await apiFetch<Ingredient>("/api/v1/ingredients", {
+      method: "POST",
+      body: JSON.stringify({
+        name: name.trim(),
+        baseUnit: unit.base,
+        purchaseUnit,
+        purchaseQty: qtyValue,
+        purchasePrice: priceValue,
+        taxType: "TAXABLE",
+        yieldRate: (yieldValue === null ? 100 : yieldValue) / 100,
+      }),
+    });
+
+    setBusy(false);
+
+    if (!result.ok) {
+      setError(result.message);
+
+      return;
+    }
+
+    // Keep the unit (the next item is usually bought the same way); clear the rest.
+    setName("");
+    setPurchaseQty("");
+    setPurchasePrice("");
+    setYieldPercent("");
+    setItems((list) => [...list, result.data].sort((a, b) => a.name.localeCompare(b.name, "ko")));
+    nameRef.current?.focus();
+  }
+
+  async function patch(item: Ingredient, body: Record<string, number>, done: string) {
+    setError(null);
+    setInfo(null);
+
+    const result = await apiFetch<Ingredient>(`/api/v1/ingredients/${item.id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+
+    if (!result.ok) {
+      setError(result.message);
+
+      return;
+    }
+
+    setItems((list) => list.map((i) => (i.id === item.id ? result.data : i)));
+    setInfo(done);
+  }
+
+  function updatePrice(item: Ingredient, text: string) {
+    const price = parseAmount(text);
+
+    if (price === null || price < 0 || price === item.purchasePrice) return;
+
+    void patch(
+      item,
+      { purchasePrice: price },
+      price > item.purchasePrice
+        ? `${item.name} 가격이 올라서 이상징후에 알림을 남겼습니다.`
+        : `${item.name} 가격을 바꿨습니다.`,
+    );
+  }
+
+  function updateYield(item: Ingredient, text: string) {
+    const percent = parseAmount(text);
+
+    if (percent === null || !(percent > 0 && percent <= 100) || percent === Math.round(item.yieldRate * 1000) / 10) {
+      return;
+    }
+
+    void patch(item, { yieldRate: percent / 100 }, `${item.name} 수율을 바꿨습니다.`);
+  }
+
+  const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") e.currentTarget.blur();
+  };
+
+  const visible = search.trim()
+    ? items.filter((i) => i.name.includes(search.trim()))
+    : items;
+
+  const input = "rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm";
+
+  return (
+    <div className="space-y-6 pb-24 sm:pb-8">
+      <header className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Ingredients</p>
+        <h1 className="text-3xl font-semibold text-white">식재료</h1>
+        <p className="text-sm text-slate-400">
+          한 번에 사는 양과 가격을 넣으면 1g·1ml·1개당 단가가 계산됩니다. 값이 바뀌면 목록에서 가격만
+          고치세요. 이력이 남고, 오르면 바로 알림이 생깁니다.
+        </p>
+      </header>
+
+      {loading ? <StatusBanner kind="loading" message="불러오는 중…" /> : null}
+      {error ? <StatusBanner kind="error" message={error} /> : null}
+      {info ? <StatusBanner kind="info" message={info} /> : null}
+
+      <form
+        onSubmit={(e) => void create(e)}
+        className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+      >
+        <h2 className="text-sm font-medium text-slate-200">새 식재료</h2>
+        <div className="grid gap-2 sm:grid-cols-[2fr_1fr_6rem_1.5fr_6rem]">
+          <input
+            ref={nameRef}
+            className={input}
+            placeholder="이름 (예: 양파)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className={input}
+            inputMode={inputModes.decimal}
+            placeholder="한 번에 사는 양"
+            value={purchaseQty}
+            onChange={(e) => setPurchaseQty(e.target.value)}
+          />
+          <select
+            aria-label="단위"
+            className={input}
+            value={purchaseUnit}
+            onChange={(e) => {
+              const next = PURCHASE_UNITS.find((u) => u.value === e.target.value);
+
+              if (next) setPurchaseUnit(next.value);
+            }}
+          >
+            {PURCHASE_UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))}
+          </select>
+          <input
+            className={input}
+            inputMode={inputModes.numeric}
+            placeholder="그 가격 (예: 13.4만)"
+            value={purchasePrice}
+            onChange={(e) => setPurchasePrice(e.target.value)}
+          />
+          <input
+            aria-label="손질 수율 %"
+            className={input}
+            inputMode={inputModes.decimal}
+            placeholder="수율 100%"
+            value={yieldPercent}
+            onChange={(e) => setYieldPercent(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+          >
+            추가 (Enter)
+          </button>
+          <span className="text-xs text-slate-500">
+            수율은 손질 후 남는 비율입니다. 비워 두면 100%. 예: 양파 껍질 벗기면 90%
+          </span>
+        </div>
+      </form>
+
+      {items.length > 5 ? (
+        <input
+          className={`${input} w-full`}
+          placeholder="재료 찾기"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      ) : null}
+
+      <ul className="divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800">
+        {visible.map((item) => (
+          <li
+            key={item.id}
+            className="flex flex-col gap-2 bg-slate-900/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0">
+              <div className="font-medium text-slate-100">{item.name}</div>
+              <div className="text-xs text-sky-300">
+                1{UNIT_LABEL[item.baseUnit]}당 {formatUnitCost(item.currentUnitCost)}원
+                {item.yieldRate < 1 ? (
+                  <span className="ml-2 text-amber-300">
+                    → 손질 후 {formatUnitCost(item.effectiveUnitCost)}원
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+              <span>{formatPurchaseQty(item.purchaseQty, item.baseUnit)}에</span>
+              <input
+                key={`${item.id}-p-${item.purchasePrice}`}
+                aria-label={`${item.name} 구매가`}
+                className="w-28 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-sm text-slate-100"
+                inputMode={inputModes.numeric}
+                defaultValue={item.purchasePrice.toLocaleString("ko-KR")}
+                onKeyDown={blurOnEnter}
+                onBlur={(e) => updatePrice(item, e.target.value)}
+              />
+              <span>원 · 수율</span>
+              <input
+                key={`${item.id}-y-${item.yieldRate}`}
+                aria-label={`${item.name} 수율`}
+                className="w-14 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-sm text-slate-100"
+                inputMode={inputModes.decimal}
+                defaultValue={String(Math.round(item.yieldRate * 1000) / 10)}
+                onKeyDown={blurOnEnter}
+                onBlur={(e) => updateYield(item, e.target.value)}
+              />
+              <span>%</span>
+            </div>
+          </li>
+        ))}
+        {!loading && items.length === 0 && !error ? (
+          <li className="px-4 py-6 text-sm text-slate-500">식재료가 없습니다. 위에서 추가하세요.</li>
+        ) : null}
+      </ul>
+
+      <Link href="/dashboard" className="text-sm text-sky-300">
+        ← 대시보드
+      </Link>
+    </div>
+  );
+}

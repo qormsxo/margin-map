@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MarginMap">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <path d="M96 360V152h48l88 140 88-140h48v208h-52V250l-68 108h-32l-68-108v110H96z" fill="#e2e8f0"/>
+  <rect x="96" y="392" width="320" height="24" rx="8" fill="#38bdf8"/>
+</svg>
