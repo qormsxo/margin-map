@@ -118,11 +118,11 @@ export default function FixedCostsPage() {
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Fixed costs</p>
-        <h1 className="text-3xl font-semibold text-white">월 고정비</h1>
-        <p className="text-sm text-slate-400">
+        <p className="eyebrow uppercase">Fixed costs</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">월 고정비</h1>
+        <p className="text-sm text-muted">
           인건비·임대료처럼 판매량과 무관하게 나가는 돈입니다. 메뉴에 나눠 붙이지 않고, 판매 기간의
-          총 공헌이익에서 빼서 <strong className="text-slate-200">실제 남는 돈(영업이익)</strong>과
+          총 공헌이익에서 빼서 <strong className="text-ink">실제 남는 돈(영업이익)</strong>과
           손익분기 매출을 계산합니다.
         </p>
       </header>
@@ -136,9 +136,9 @@ export default function FixedCostsPage() {
 
           if (!busy && name.trim() && parseAmount(amount) !== null) void create();
         }}
-        className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+        className="space-y-3 rounded-xl border border-line bg-surface p-4"
       >
-        <h2 className="text-sm font-medium text-slate-200">항목 추가</h2>
+        <h2 className="text-sm font-medium text-ink">항목 추가</h2>
         {presets.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {presets.map((p) => (
@@ -150,7 +150,7 @@ export default function FixedCostsPage() {
                   setCategory(p.category);
                   amountRef.current?.focus();
                 }}
-                className="rounded-lg border border-slate-700 px-2.5 py-1 text-xs text-slate-300 hover:border-sky-500/60"
+                className="rounded-lg border border-line-strong px-2.5 py-1 text-xs text-ink-soft hover:border-accent/60"
               >
                 {p.name}
               </button>
@@ -159,13 +159,13 @@ export default function FixedCostsPage() {
         ) : null}
         <div className="grid gap-2 sm:grid-cols-3">
           <input
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
             placeholder="이름 (예: 알바 2명)"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <select
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
             value={category}
             onChange={(e) => {
               if (isCategory(e.target.value)) setCategory(e.target.value);
@@ -178,7 +178,7 @@ export default function FixedCostsPage() {
             ))}
           </select>
           <input
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
             ref={amountRef}
             placeholder="월 금액 (예: 237만)"
             inputMode={inputModes.numeric}
@@ -189,26 +189,26 @@ export default function FixedCostsPage() {
         <button
           type="submit"
           disabled={busy || !name.trim() || parseAmount(amount) === null}
-          className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+          className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
         >
           추가 (Enter)
         </button>
       </form>
 
-      <ul className="divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800">
+      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
         {data.items.map((item) => (
           <li
             key={item.id}
-            className="flex flex-col gap-2 bg-slate-900/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <div className="font-medium text-slate-100">{item.name}</div>
-              <div className="text-xs text-slate-500">{CATEGORY_LABEL[item.category]}</div>
+              <div className="font-medium text-ink">{item.name}</div>
+              <div className="text-xs text-faint">{CATEGORY_LABEL[item.category]}</div>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <input
                 key={`${item.id}-${item.monthlyAmount}`}
-                className="w-32 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-slate-200"
+                className="w-32 rounded border border-line-strong bg-surface px-2 py-1 text-right text-ink"
                 inputMode={inputModes.numeric}
                 defaultValue={item.monthlyAmount.toLocaleString("ko-KR")}
                 onKeyDown={(e) => {
@@ -216,11 +216,11 @@ export default function FixedCostsPage() {
                 }}
                 onBlur={(e) => void updateAmount(item, e.target.value)}
               />
-              <span className="text-slate-500">원/월</span>
+              <span className="text-faint">원/월</span>
               <button
                 type="button"
                 onClick={() => void remove(item)}
-                className="rounded px-2 py-1 text-xs text-rose-300 hover:bg-slate-800"
+                className="rounded px-2 py-1 text-xs text-loss hover:bg-subtle"
               >
                 삭제
               </button>
@@ -228,23 +228,23 @@ export default function FixedCostsPage() {
           </li>
         ))}
         {!loading && data.items.length === 0 && !error ? (
-          <li className="px-4 py-6 text-sm text-slate-500">
+          <li className="px-4 py-6 text-sm text-faint">
             고정비가 없습니다. 인건비·임대료부터 넣어 보세요.
           </li>
         ) : null}
         {data.items.length > 0 ? (
-          <li className="flex justify-between bg-slate-900 px-4 py-3 text-sm">
-            <span className="text-slate-400">월 합계</span>
-            <span className="font-semibold text-white">{won(data.monthlyTotal)}</span>
+          <li className="flex justify-between bg-subtle px-4 py-3 text-sm">
+            <span className="text-muted">월 합계</span>
+            <span className="font-semibold text-ink">{won(data.monthlyTotal)}</span>
           </li>
         ) : null}
       </ul>
 
       <div className="flex gap-4 text-sm">
-        <Link href="/contribution" className="text-sky-300">
+        <Link href="/contribution" className="text-accent-ink">
           실제 이익 보기 →
         </Link>
-        <Link href="/dashboard" className="text-slate-400">
+        <Link href="/dashboard" className="text-muted">
           ← 대시보드
         </Link>
       </div>

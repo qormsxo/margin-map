@@ -1,21 +1,212 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
-:root {
-  --background: #020617;
-  --foreground: #e2e8f0;
-  --accent: #38bdf8;
+/*
+ * MarginMap palette — 60 / 30 / 10
+ *
+ * 60% Oat (main):      warm ivory canvas and white surfaces. Calm, paper-like, easy to stay on.
+ * 30% Pine (second):   deep green for navigation, headings, hero numbers. Money, freshness, trust.
+ * 10% Persimmon (act): the only loud color. Buttons, unfinished steps, alerts — "look / do this".
+ *
+ * Gain / loss / warn are data colors, kept muted so they never compete with Persimmon.
+ */
+@theme {
+  --color-canvas: #f6f3ec;
+  --color-surface: #ffffff;
+  --color-subtle: #efebe2;
+  --color-line: #e7e1d5;
+  --color-line-strong: #d6cebf;
+
+  --color-ink: #14251f;
+  --color-ink-soft: #33443e;
+  --color-muted: #5f6d67;
+  --color-faint: #8b948f;
+
+  --color-pine-50: #eef4f1;
+  --color-pine-100: #dbe8e2;
+  --color-pine-200: #b5d0c4;
+  --color-pine-300: #8bb5a3;
+  --color-pine-500: #3f7a66;
+  --color-pine-600: #2c6150;
+  --color-pine-700: #214b3f;
+  --color-pine-800: #18392f;
+  --color-pine-900: #112a23;
+  --color-pine-950: #0b1d18;
+
+  /* Theme-aware brand roles (Pine used as text / tints on the page). */
+  --color-heading: #112a23;
+  --color-brand: #2c6150;
+  --color-brand-soft: #eef4f1;
+  --color-brand-tint: #dbe8e2;
+  --color-brand-solid: #112a23;
+
+  --color-accent: #ff5b1f;
+  --color-accent-hover: #ec4a0f;
+  --color-accent-soft: #fff0e8;
+  --color-accent-ink: #c2410c;
+
+  --color-gain: #1f8a5b;
+  --color-gain-soft: #e4f4eb;
+  --color-loss: #d1433a;
+  --color-loss-soft: #fcebe9;
+  --color-warn: #a96a12;
+  --color-warn-soft: #fdf2dc;
+
+  --font-sans: "Pretendard Variable", Pretendard, var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+
+  --shadow-card: 0 1px 2px rgb(20 37 31 / 0.04), 0 4px 16px -6px rgb(20 37 31 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(20 37 31 / 0.05), 0 12px 32px -10px rgb(20 37 31 / 0.18);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/*
+ * Dark mode: same 60/30/10 — Oat becomes a near-black green canvas, Pine stays the
+ * sidebar/hero color, Persimmon stays the action color. Follows the OS unless the
+ * user picked a theme (data-theme on <html>, set before paint in layout.tsx).
+ */
+:root {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: #0c1411;
+    --color-surface: #131d19;
+    --color-subtle: #1a2622;
+    --color-line: #22312b;
+    --color-line-strong: #314339;
+
+    --color-ink: #edf1ee;
+    --color-ink-soft: #cdd6d1;
+    --color-muted: #9aa7a1;
+    --color-faint: #6f7d77;
+
+    --color-heading: #f2f5f1;
+    --color-brand: #86c2aa;
+    --color-brand-soft: #16302a;
+    --color-brand-tint: #1d3a32;
+    --color-brand-solid: #2c6150;
+
+    --color-accent-soft: #2b1a12;
+    --color-accent-ink: #ff9466;
+
+    --color-gain: #4cc38a;
+    --color-gain-soft: #12291f;
+    --color-loss: #ff7a6e;
+    --color-loss-soft: #2e1716;
+    --color-warn: #e2a84b;
+    --color-warn-soft: #2a2112;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -6px rgb(0 0 0 / 0.4);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -10px rgb(0 0 0 / 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-canvas: #0c1411;
+  --color-surface: #131d19;
+  --color-subtle: #1a2622;
+  --color-line: #22312b;
+  --color-line-strong: #314339;
+
+  --color-ink: #edf1ee;
+  --color-ink-soft: #cdd6d1;
+  --color-muted: #9aa7a1;
+  --color-faint: #6f7d77;
+
+  --color-heading: #f2f5f1;
+  --color-brand: #86c2aa;
+  --color-brand-soft: #16302a;
+  --color-brand-tint: #1d3a32;
+  --color-brand-solid: #2c6150;
+
+  --color-accent-soft: #2b1a12;
+  --color-accent-ink: #ff9466;
+
+  --color-gain: #4cc38a;
+  --color-gain-soft: #12291f;
+  --color-loss: #ff7a6e;
+  --color-loss-soft: #2e1716;
+  --color-warn: #e2a84b;
+  --color-warn-soft: #2a2112;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -6px rgb(0 0 0 / 0.4);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -10px rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
   padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+input,
+select,
+textarea {
+  color: var(--color-ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-faint);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(255 91 31 / 0.15);
+}
+
+button,
+a {
+  transition:
+    background-color 150ms,
+    color 150ms,
+    border-color 150ms,
+    box-shadow 150ms,
+    transform 150ms;
+}
+
+/* Cards: one class so every screen shares the same surface. */
+@utility card {
+  border-radius: 1rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-brand);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }

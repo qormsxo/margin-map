@@ -7,10 +7,10 @@ export function StatusBanner({
 }) {
   const styles =
     kind === "error"
-      ? "border-rose-500/40 bg-rose-950/40 text-rose-100"
+      ? "border-loss/30 bg-loss-soft text-loss"
       : kind === "loading"
-        ? "border-slate-600 bg-slate-900/70 text-slate-300"
-        : "border-sky-500/30 bg-slate-900/70 text-sky-100";
+        ? "border-line-strong bg-surface text-ink-soft"
+        : "border-accent/30 bg-surface text-heading";
 
   return (
     <div className={`rounded-lg border px-3 py-2 text-sm ${styles}`} role="status">

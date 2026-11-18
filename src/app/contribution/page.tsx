@@ -73,7 +73,7 @@ export default async function ContributionPage({
       <div className="space-y-6">
         <PageHeader />
         {picker}
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           기간 {analysis.evidence.periodStart} ~ {analysis.evidence.periodEnd} · 현재 재료 단가 기준
           {analysis.excludedMenuCount > 0
             ? ` · 판매 기록이 없는 메뉴 ${analysis.excludedMenuCount}개 제외`
@@ -83,9 +83,9 @@ export default async function ContributionPage({
         <ProfitAndLossCard pl={analysis.profitAndLoss} />
 
         {analysis.byChannel.length > 1 ? (
-          <section className="overflow-auto rounded-xl border border-slate-800">
+          <section className="overflow-auto rounded-xl border border-line">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-900 text-slate-400">
+              <thead className="bg-subtle text-muted">
                 <tr>
                   <th className="px-3 py-2">판매 채널</th>
                   <th className="px-3 py-2">판매량</th>
@@ -97,11 +97,11 @@ export default async function ContributionPage({
               </thead>
               <tbody>
                 {analysis.byChannel.map((c) => (
-                  <tr key={c.channelId} className="border-t border-slate-800">
-                    <td className="px-3 py-2 text-slate-200">{c.name}</td>
+                  <tr key={c.channelId} className="border-t border-line">
+                    <td className="px-3 py-2 text-ink">{c.name}</td>
                     <td className="px-3 py-2">{c.qty.toLocaleString("ko-KR")}</td>
                     <td className="px-3 py-2">{won(c.revenue)}</td>
-                    <td className="px-3 py-2 text-xs text-slate-400">
+                    <td className="px-3 py-2 text-xs text-muted">
                       {!c.hasDeliveryFee
                         ? "—"
                         : c.deliveryBasis === "PER_ORDER"
@@ -118,10 +118,10 @@ export default async function ContributionPage({
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <h2 className="text-sm text-amber-200">많이 팔리지만 덜 남는 메뉴</h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-300">
-              {analysis.highSalesLowContrib.length === 0 ? <li className="text-slate-500">해당 없음</li> : null}
+          <section className="rounded-xl border border-line card p-4">
+            <h2 className="text-sm text-warn">많이 팔리지만 덜 남는 메뉴</h2>
+            <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+              {analysis.highSalesLowContrib.length === 0 ? <li className="text-faint">해당 없음</li> : null}
               {analysis.highSalesLowContrib.map((m) => (
                 <li key={m.menuItemId}>
                   {m.name} · {m.salesQty.toLocaleString("ko-KR")}개 · 1개당 {won(m.contributionPerUnit)} · 총{" "}
@@ -130,10 +130,10 @@ export default async function ContributionPage({
               ))}
             </ul>
           </section>
-          <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <h2 className="text-sm text-emerald-200">적게 팔리지만 많이 남는 메뉴</h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-300">
-              {analysis.lowSalesHighContrib.length === 0 ? <li className="text-slate-500">해당 없음</li> : null}
+          <section className="rounded-xl border border-line card p-4">
+            <h2 className="text-sm text-gain">적게 팔리지만 많이 남는 메뉴</h2>
+            <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+              {analysis.lowSalesHighContrib.length === 0 ? <li className="text-faint">해당 없음</li> : null}
               {analysis.lowSalesHighContrib.map((m) => (
                 <li key={m.menuItemId}>
                   {m.name} · {m.salesQty.toLocaleString("ko-KR")}개 · 1개당 {won(m.contributionPerUnit)} · 총{" "}
@@ -144,9 +144,9 @@ export default async function ContributionPage({
           </section>
         </div>
 
-        <section className="overflow-auto rounded-xl border border-slate-800">
+        <section className="overflow-auto rounded-xl border border-line">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
+            <thead className="bg-subtle text-muted">
               <tr>
                 <th className="px-3 py-2">메뉴</th>
                 <th className="px-3 py-2">판매량</th>
@@ -157,12 +157,12 @@ export default async function ContributionPage({
             </thead>
             <tbody>
               {analysis.menus.map((m) => (
-                <tr key={m.menuItemId} className="border-t border-slate-800">
-                  <td className="px-3 py-2 text-slate-200">{m.name}</td>
+                <tr key={m.menuItemId} className="border-t border-line">
+                  <td className="px-3 py-2 text-ink">{m.name}</td>
                   <td className="px-3 py-2">{m.salesQty.toLocaleString("ko-KR")}</td>
                   <td className="px-3 py-2">{won(m.contributionPerUnit)}</td>
                   <td className="px-3 py-2">{won(m.totalContribution)}</td>
-                  <td className="px-3 py-2 text-xs text-slate-400">{QUADRANT_LABEL[m.quadrant]}</td>
+                  <td className="px-3 py-2 text-xs text-muted">{QUADRANT_LABEL[m.quadrant]}</td>
                 </tr>
               ))}
             </tbody>
@@ -216,10 +216,10 @@ const pct = (v: number | null) => (v === null ? "—" : `${(v * 100).toFixed(1)}
 function ProfitAndLossCard({ pl }: { pl: ProfitAndLoss }) {
   if (pl.status === "NO_FIXED_COSTS") {
     return (
-      <section className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-5">
-        <h2 className="text-sm font-medium text-slate-200">실제 남는 돈</h2>
-        <p className="mt-2 text-sm text-slate-400">{pl.emptyState.message}</p>
-        <Link href="/fixed-costs" className="mt-2 inline-block text-sm text-sky-300">
+      <section className="rounded-xl border border-dashed border-line-strong bg-surface p-5">
+        <h2 className="text-sm font-medium text-ink">실제 남는 돈</h2>
+        <p className="mt-2 text-sm text-muted">{pl.emptyState.message}</p>
+        <Link href="/fixed-costs" className="mt-2 inline-block text-sm text-accent-ink">
           월 고정비 입력하기 →
         </Link>
       </section>
@@ -229,42 +229,42 @@ function ProfitAndLossCard({ pl }: { pl: ProfitAndLoss }) {
   const profitable = pl.operatingProfit >= 0;
 
   return (
-    <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+    <section className="space-y-5 rounded-3xl bg-pine-900 p-6 text-white sm:p-7">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-medium text-slate-200">실제 남는 돈 ({pl.wholeMonths ? `${pl.wholeMonths}개월` : `${pl.periodDays}일`})</h2>
-        <Link href="/fixed-costs" className="text-xs text-sky-300">
+        <h2 className="text-sm text-pine-200">진짜 남은 돈 · 영업이익 ({pl.wholeMonths ? `${pl.wholeMonths}개월` : `${pl.periodDays}일`})</h2>
+        <Link href="/fixed-costs" className="text-xs font-semibold text-pine-200 hover:text-white">
           고정비 수정
         </Link>
       </div>
-      <p className={`text-3xl font-semibold ${profitable ? "text-emerald-300" : "text-rose-300"}`}>
+      <p className={`text-4xl font-bold tracking-tight sm:text-5xl ${profitable ? "text-white" : "text-[#ff9a7a]"}`}>
         {profitable ? "" : "−"}
         {won(Math.abs(pl.operatingProfit))}
       </p>
-      <dl className="grid gap-2 text-sm sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-4 border-t border-pine-700 pt-5 text-sm sm:grid-cols-4">
         <div>
-          <dt className="text-slate-500">매출</dt>
-          <dd className="text-slate-200">{won(pl.revenue)}</dd>
+          <dt className="text-pine-300">매출</dt>
+          <dd className="mt-0.5 font-semibold text-white">{won(pl.revenue)}</dd>
         </div>
         <div>
-          <dt className="text-slate-500">총 공헌이익</dt>
-          <dd className="text-slate-200">
+          <dt className="text-pine-300">총 공헌이익</dt>
+          <dd className="mt-0.5 font-semibold text-white">
             {won(pl.totalContribution)} ({pct(pl.contributionMarginRatio)})
           </dd>
         </div>
         <div>
-          <dt className="text-slate-500">{pl.wholeMonths ? "고정비 (월)" : "고정비 (일수만큼)"}</dt>
-          <dd className="text-slate-200">−{won(pl.fixedCosts)}</dd>
+          <dt className="text-pine-300">{pl.wholeMonths ? "고정비 (월)" : "고정비 (일수만큼)"}</dt>
+          <dd className="mt-0.5 font-semibold text-white">−{won(pl.fixedCosts)}</dd>
         </div>
         <div>
-          <dt className="text-slate-500">손익분기 매출</dt>
-          <dd className="text-slate-200">
+          <dt className="text-pine-300">손익분기 매출</dt>
+          <dd className="mt-0.5 font-semibold text-white">
             {pl.breakEvenRevenue === null
               ? "계산 불가"
               : `${won(pl.breakEvenRevenue)} (하루 ${won(pl.breakEvenRevenuePerDay ?? 0)})`}
           </dd>
         </div>
       </dl>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-pine-300">
         영업이익 = 총 공헌이익 − 고정비. 손익분기는 이 기간 실제 판매 구성 기준이며, 세금·대출이자는
         포함하지 않습니다.
         {pl.safetyMarginRate !== null ? ` 안전한계율 ${pct(pl.safetyMarginRate)}.` : ""}
@@ -288,10 +288,10 @@ function PeriodPicker({
         <Link
           key={p.id}
           href={`/contribution?periodId=${p.id}`}
-          className={`rounded-lg border px-3 py-1 ${
+          className={`rounded-full border px-3.5 py-1 ${
             p.id === selectedId
-              ? "border-sky-500 bg-sky-500/10 text-sky-200"
-              : "border-slate-700 text-slate-400 hover:text-slate-200"
+              ? "border-brand-solid bg-brand-solid text-white"
+              : "border-line-strong text-muted hover:text-ink"
           }`}
         >
           {p.label}
@@ -304,13 +304,13 @@ function PeriodPicker({
 function PageHeader() {
   return (
     <div className="space-y-2">
-      <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">
+      <p className="eyebrow uppercase">
         Profit
       </p>
-      <h1 className="text-3xl font-semibold tracking-tight text-white">
+      <h1 className="text-[28px] font-bold tracking-tight text-heading">
         판매량·공헌이익·실제 이익
       </h1>
-      <Link href="/dashboard" className="text-sm text-sky-300 hover:text-sky-200">
+      <Link href="/dashboard" className="text-sm text-accent-ink hover:text-accent">
         ← 대시보드
       </Link>
     </div>

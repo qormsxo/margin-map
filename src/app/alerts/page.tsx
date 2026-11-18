@@ -114,10 +114,10 @@ export default function AlertsPage() {
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Alerts</p>
-        <h1 className="text-3xl font-semibold text-white">이상징후 알림</h1>
-        <p className="text-sm text-slate-400">
-          <b className="text-slate-200">재료 가격을 올리면 바로</b> 여기에 알림이 생깁니다 (식재료 화면에서
+        <p className="eyebrow uppercase">Alerts</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">이상징후 알림</h1>
+        <p className="text-sm text-muted">
+          <b className="text-ink">재료 가격을 올리면 바로</b> 여기에 알림이 생깁니다 (식재료 화면에서
           구매가를 고치면 됨). 아래 주간 점검은 메뉴 원가·마진이 지난주보다 나빠졌는지 보는 것으로,
           매주 한 번 누르면 다음 주부터 비교됩니다.
         </p>
@@ -127,12 +127,12 @@ export default function AlertsPage() {
       {error ? <StatusBanner kind="error" message={error} /> : null}
       {info ? <StatusBanner kind="info" message={info} /> : null}
 
-      <section className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4 sm:flex-row sm:items-end">
+      <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 sm:flex-row sm:items-end">
         <label className="flex-1 space-y-1 text-sm">
-          <span className="text-slate-400">점검할 주 (아무 날짜나 고르면 그 주 월요일 기준)</span>
+          <span className="text-muted">점검할 주 (아무 날짜나 고르면 그 주 월요일 기준)</span>
           <input
             type="date"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2"
             value={weekStart}
             onChange={(e) => {
               if (e.target.value) setWeekStart(mondayOf(e.target.value));
@@ -143,7 +143,7 @@ export default function AlertsPage() {
           type="button"
           disabled={busy}
           onClick={() => void runWeekly()}
-          className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
         >
           점검하기
         </button>
@@ -153,17 +153,17 @@ export default function AlertsPage() {
         {items.map((item) => (
           <li
             key={item.id}
-            className="rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+            className="rounded-xl border border-line bg-surface p-4"
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-slate-100">{item.title}</span>
+              <span className="text-sm font-medium text-ink">{item.title}</span>
             </div>
-            <p className="mt-2 text-sm text-slate-400">{item.body}</p>
+            <p className="mt-2 text-sm text-muted">{item.body}</p>
             <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-500">{item.weekStart} 주</span>
+              <span className="text-xs text-faint">{item.weekStart} 주</span>
               <button
                 type="button"
-                className="text-xs text-sky-300"
+                className="text-xs text-accent-ink"
                 onClick={() => void acknowledge(item.id)}
               >
                 확인
@@ -172,13 +172,13 @@ export default function AlertsPage() {
           </li>
         ))}
         {!loading && items.length === 0 && !error ? (
-          <li className="rounded-xl border border-dashed border-slate-700 p-6 text-sm text-slate-500">
+          <li className="rounded-xl border border-dashed border-line-strong p-6 text-sm text-faint">
             확인할 알림이 없습니다.
           </li>
         ) : null}
       </ul>
 
-      <Link href="/dashboard" className="text-sm text-sky-300">
+      <Link href="/dashboard" className="text-sm text-accent-ink">
         ← 대시보드
       </Link>
     </div>

@@ -187,26 +187,26 @@ export function RecipeEditor({
     await onSaved();
   }
 
-  const input = "rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm";
+  const input = "rounded-lg border border-line-strong bg-surface px-2 py-1.5 text-sm";
 
   if (ingredients.length === 0 && preps.length === 0) {
     return (
-      <div className="mt-3 rounded-lg border border-dashed border-slate-700 p-3 text-sm text-slate-400">
+      <div className="mt-3 rounded-lg border border-dashed border-line-strong p-3 text-sm text-muted">
         식재료를 먼저 등록해야 레시피를 만들 수 있습니다.
       </div>
     );
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+    <div className="mt-3 space-y-3 rounded-lg border border-line-strong bg-canvas p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-faint">
           메뉴 1개에 들어가는 재료와 양(손질 후)을 넣으세요. 양 칸에서 Enter를 누르면 다음 줄로 갑니다.
         </p>
         {otherMenus.length > 0 ? (
           <select
             aria-label="다른 메뉴 레시피 가져오기"
-            className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-300"
+            className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-xs text-ink-soft"
             value=""
             onChange={(e) => copyFrom(e.target.value)}
           >
@@ -280,17 +280,17 @@ export function RecipeEditor({
                   else addRow();
                 }}
               />
-              <span className="hidden text-sm text-slate-400 sm:inline">
+              <span className="hidden text-sm text-muted sm:inline">
                 {info ? UNIT_LABEL[info.unit] : ""}
               </span>
-              <span className="hidden text-right text-sm text-slate-300 sm:inline">
+              <span className="hidden text-right text-sm text-ink-soft sm:inline">
                 {cost === null ? (info && info.unitCost === null ? "저장 후 계산" : "") : won(cost)}
               </span>
               <button
                 type="button"
                 aria-label="이 재료 빼기"
                 onClick={() => setRows((list) => (list.length > 1 ? list.filter((r) => r.key !== row.key) : [{ key: newKey(), ref: "", qty: "" }]))}
-                className="text-lg leading-none text-slate-500 hover:text-rose-300"
+                className="text-lg leading-none text-faint hover:text-loss"
               >
                 ×
               </button>
@@ -302,28 +302,28 @@ export function RecipeEditor({
       <button
         type="button"
         onClick={addRow}
-        className="text-sm text-sky-300"
+        className="text-sm text-accent-ink"
       >
         + 재료 추가
       </button>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-800 pt-3 text-sm">
-        <span className="text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-sm">
+        <span className="text-ink-soft">
           재료비 {won(total)}
           {hasPrep ? " + 반제품" : ""}
           {sellingPrice > 0 && !hasPrep ? (
-            <span className="ml-2 text-slate-500">(판매가의 {((total / sellingPrice) * 100).toFixed(1)}%)</span>
+            <span className="ml-2 text-faint">(판매가의 {((total / sellingPrice) * 100).toFixed(1)}%)</span>
           ) : null}
         </span>
         <div className="flex gap-2">
-          <button type="button" onClick={onCancel} className="rounded-lg px-3 py-1.5 text-slate-400 hover:text-slate-200">
+          <button type="button" onClick={onCancel} className="rounded-lg px-3 py-1.5 text-muted hover:text-ink">
             취소
           </button>
           <button
             type="button"
             disabled={busy || incomplete}
             onClick={() => void save()}
-            className="rounded-lg bg-sky-500 px-3 py-1.5 font-medium text-slate-950 disabled:opacity-40"
+            className="rounded-lg bg-accent px-3 py-1.5 font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
           >
             레시피 저장
           </button>
@@ -331,9 +331,9 @@ export function RecipeEditor({
       </div>
 
       {incomplete ? (
-        <p className="text-xs text-amber-300">재료와 양을 둘 다 넣거나 그 줄을 빼 주세요.</p>
+        <p className="text-xs text-warn">재료와 양을 둘 다 넣거나 그 줄을 빼 주세요.</p>
       ) : null}
-      {error ? <p className="text-xs text-rose-300">{error}</p> : null}
+      {error ? <p className="text-xs text-loss">{error}</p> : null}
     </div>
   );
 }

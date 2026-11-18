@@ -45,13 +45,13 @@ export function LoginForm() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
+    <div className="card mx-auto max-w-md space-y-6 p-6 sm:mt-6 sm:p-8">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Account</p>
-        <h1 className="text-3xl font-semibold text-white">
+        <p className="eyebrow">{mode === "login" ? "다시 오셨네요" : "3초면 끝나요"}</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">
           {mode === "login" ? "로그인" : "가입"}
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           로그인하면 휴대폰과 PC 어디서나 같은 매장 데이터를 볼 수 있습니다.
         </p>
       </div>
@@ -68,14 +68,14 @@ export function LoginForm() {
         }}
       >
         <input
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
           placeholder="이메일"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
           placeholder={mode === "register" ? "비밀번호 (8자 이상)" : "비밀번호"}
           type="password"
           value={password}
@@ -83,7 +83,7 @@ export function LoginForm() {
         />
         {mode === "register" ? (
           <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
             placeholder="매장명"
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
@@ -92,7 +92,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={busy || !email || !password}
-          className="w-full rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+          className="w-full rounded-xl bg-accent px-4 py-3 text-[15px] font-semibold text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
         >
           {mode === "login" ? "로그인" : "가입하고 시작"}
         </button>
@@ -100,13 +100,13 @@ export function LoginForm() {
 
       <button
         type="button"
-        className="text-sm text-sky-300"
+        className="text-sm font-semibold text-brand hover:text-heading"
         onClick={() => setMode(mode === "login" ? "register" : "login")}
       >
         {mode === "login" ? "계정이 없나요? 가입" : "이미 계정이 있나요? 로그인"}
       </button>
 
-      <Link href="/" className="block text-sm text-slate-500">
+      <Link href="/" className="block text-sm text-faint">
         ← 홈
       </Link>
     </div>

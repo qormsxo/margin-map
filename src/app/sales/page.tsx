@@ -365,14 +365,14 @@ export default function SalesPage() {
   }
 
   const missingPresets = PRESETS.filter((p) => !channels.some((c) => c.name === p.name));
-  const input = "w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-sm text-slate-100";
+  const input = "w-full rounded border border-line-strong bg-surface px-2 py-1 text-right text-sm text-ink";
 
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Sales</p>
-        <h1 className="text-3xl font-semibold text-white">판매량</h1>
-        <p className="text-sm text-slate-400">
+        <p className="eyebrow uppercase">Sales</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">판매량</h1>
+        <p className="text-sm text-muted">
           한 달에 한 번, 메뉴별로 홀·배달앱에서 몇 개 팔렸는지 넣으세요. 채널마다 수수료가 달라서
           따로 넣어야 실제 남는 돈이 맞게 나옵니다.
         </p>
@@ -383,15 +383,15 @@ export default function SalesPage() {
       {info ? <StatusBanner kind="info" message={info} /> : null}
 
       {!loading && channels.length === 0 && !error ? (
-        <section className="space-y-3 rounded-xl border border-dashed border-slate-700 p-4">
-          <p className="text-sm text-slate-300">먼저 어디서 파는지 골라 주세요.</p>
+        <section className="space-y-3 rounded-xl border border-dashed border-line-strong p-4">
+          <p className="text-sm text-ink-soft">먼저 어디서 파는지 골라 주세요.</p>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((p) => (
               <button
                 key={p.name}
                 type="button"
                 onClick={() => void addChannel(p)}
-                className="rounded-lg border border-sky-500/50 px-3 py-1.5 text-sm text-sky-300"
+                className="rounded-lg border border-accent/50 px-3 py-1.5 text-sm text-accent-ink"
               >
                 + {p.name}
               </button>
@@ -402,13 +402,13 @@ export default function SalesPage() {
 
       {channels.length > 0 && channels.length < 3 && missingPresets.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-slate-400">다른 데서도 파나요?</span>
+          <span className="text-muted">다른 데서도 파나요?</span>
           {missingPresets.map((p) => (
             <button
               key={p.name}
               type="button"
               onClick={() => void addChannel(p)}
-              className="rounded-lg border border-sky-500/50 px-3 py-1 text-sky-300"
+              className="rounded-lg border border-accent/50 px-3 py-1 text-accent-ink"
             >
               + {p.name}
             </button>
@@ -419,9 +419,9 @@ export default function SalesPage() {
       {channels.length > 0 ? (
         <section className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">
-            <span className="block text-slate-400">기간</span>
+            <span className="block text-muted">기간</span>
             <select
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
               value={periodId}
               onChange={(e) => {
                 if (dirty && !window.confirm("저장하지 않은 입력이 있습니다. 다른 달로 옮길까요?")) return;
@@ -437,10 +437,10 @@ export default function SalesPage() {
             </select>
           </label>
           <label className="space-y-1 text-sm">
-            <span className="block text-slate-400">새 달</span>
+            <span className="block text-muted">새 달</span>
             <input
               type="month"
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
               value={newMonth}
               onChange={(e) => setNewMonth(e.target.value)}
             />
@@ -449,7 +449,7 @@ export default function SalesPage() {
             type="button"
             disabled={!newMonth}
             onClick={() => void createMonth()}
-            className="rounded-lg border border-sky-500/50 px-3 py-2 text-sm text-sky-300 disabled:opacity-40"
+            className="rounded-lg border border-accent/50 px-3 py-2 text-sm text-accent-ink disabled:opacity-40"
           >
             추가
           </button>
@@ -466,19 +466,19 @@ export default function SalesPage() {
             <button
               type="button"
               onClick={copyPrevious}
-              className="rounded-lg border border-sky-500/50 px-3 py-1.5 text-sm text-sky-300"
+              className="rounded-lg border border-accent/50 px-3 py-1.5 text-sm text-accent-ink"
             >
               {periodLabel(previousPeriod)} 숫자 그대로 가져와서 고치기
             </button>
           ) : null}
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Enter·↑↓로 칸 이동. 엑셀이나 포스 화면에서 숫자 여러 칸을 복사해 붙여넣으면 한 번에 채워집니다.
           </p>
-          <div className="overflow-auto rounded-xl border border-slate-800">
+          <div className="overflow-auto rounded-xl border border-line">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-900 text-slate-400">
+              <thead className="bg-subtle text-muted">
                 <tr>
-                  <th className="sticky left-0 bg-slate-900 px-3 py-2 text-left">메뉴</th>
+                  <th className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-subtle px-3 py-2 text-left font-semibold">메뉴</th>
                   {channels.map((c) => (
                     <th key={c.id} className="min-w-24 px-2 py-2 text-right">
                       {c.name}
@@ -489,8 +489,8 @@ export default function SalesPage() {
               </thead>
               <tbody>
                 {menus.map((menu, mi) => (
-                  <tr key={menu.id} className="border-t border-slate-800">
-                    <td className="sticky left-0 bg-slate-950 px-3 py-1.5 text-slate-200">{menu.name}</td>
+                  <tr key={menu.id} className="border-t border-line">
+                    <td className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-surface px-3 py-1.5 text-ink">{menu.name}</td>
                     {channels.map((c, ci) => {
                       const key = cellKey(menu.id, c.id);
 
@@ -513,25 +513,25 @@ export default function SalesPage() {
                         </td>
                       );
                     })}
-                    <td className="px-3 py-1.5 text-right text-slate-300">
+                    <td className="px-3 py-1.5 text-right text-ink-soft">
                       {(totals.byMenu[menu.id] ?? 0).toLocaleString("ko-KR")}
                     </td>
                   </tr>
                 ))}
-                <tr className="border-t border-slate-700 bg-slate-900/60 text-slate-300">
-                  <td className="sticky left-0 bg-slate-900 px-3 py-2">합계</td>
+                <tr className="border-t border-line-strong card text-ink-soft">
+                  <td className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-subtle px-3 py-2">합계</td>
                   {channels.map((c) => (
                     <td key={c.id} className="px-2 py-2 text-right">
                       {(totals.byChannel[c.id] ?? 0).toLocaleString("ko-KR")}
                     </td>
                   ))}
-                  <td className="px-3 py-2 text-right font-medium text-white">
+                  <td className="px-3 py-2 text-right font-medium text-ink">
                     {totals.all.toLocaleString("ko-KR")}
                   </td>
                 </tr>
                 {deliveryChannels.length > 0 ? (
-                  <tr className="border-t border-slate-800">
-                    <td className="sticky left-0 bg-slate-950 px-3 py-2 text-amber-200">
+                  <tr className="border-t border-line">
+                    <td className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-surface px-3 py-2 text-warn">
                       주문 건수
                     </td>
                     {channels.map((c) => (
@@ -559,7 +559,7 @@ export default function SalesPage() {
           </div>
 
           {deliveryChannels.length > 0 ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-faint">
               배달비는 메뉴 개수가 아니라 주문 1건마다 나갑니다. 배달앱 정산 화면의 주문 건수를 넣으면
               정확해지고, 비워 두면 메뉴 1개마다 배달비를 빼서 실제보다 덜 남는 것으로 계산됩니다.
             </p>
@@ -570,12 +570,12 @@ export default function SalesPage() {
               type="button"
               disabled={busy || !dirty}
               onClick={() => void save()}
-              className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
             >
               저장
             </button>
-            {dirty ? <span className="text-xs text-amber-300">저장하지 않은 입력이 있습니다</span> : null}
-            <Link href="/contribution" className="ml-auto text-sm text-sky-300">
+            {dirty ? <span className="text-xs text-warn">저장하지 않은 입력이 있습니다</span> : null}
+            <Link href="/contribution" className="ml-auto text-sm text-accent-ink">
               실제 이익 보기 →
             </Link>
           </div>
@@ -583,23 +583,23 @@ export default function SalesPage() {
       ) : null}
 
       {channels.length > 0 ? (
-        <section className="rounded-xl border border-slate-800 bg-slate-900/40">
+        <section className="rounded-xl border border-line bg-surface">
           <button
             type="button"
             onClick={() => setShowChannels((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-3 text-sm text-slate-200"
+            className="flex w-full items-center justify-between px-4 py-3 text-sm text-ink"
           >
             <span>판매 채널과 수수료</span>
-            <span className="text-slate-500">{showChannels ? "접기" : "펼치기"}</span>
+            <span className="text-faint">{showChannels ? "접기" : "펼치기"}</span>
           </button>
           {showChannels ? (
-            <div className="space-y-3 border-t border-slate-800 p-4">
-              <p className="text-xs text-slate-500">
+            <div className="space-y-3 border-t border-line p-4">
+              <p className="text-xs text-faint">
                 처음 넣은 값은 예시입니다. 계약서나 정산 화면의 실제 요율로 고쳐 주세요.
               </p>
               <div className="overflow-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="text-slate-400">
+                  <thead className="text-muted">
                     <tr>
                       <th className="px-2 py-1 text-left">채널</th>
                       <th className="px-2 py-1 text-right">중개수수료 %</th>
@@ -611,8 +611,8 @@ export default function SalesPage() {
                   </thead>
                   <tbody>
                     {channels.map((c) => (
-                      <tr key={`${c.id}-${c.channelFeeRate}-${c.paymentFeeRate}-${c.deliveryFeeFixed}`} className="border-t border-slate-800">
-                        <td className="px-2 py-1.5 text-slate-200">{c.name}</td>
+                      <tr key={`${c.id}-${c.channelFeeRate}-${c.paymentFeeRate}-${c.deliveryFeeFixed}`} className="border-t border-line">
+                        <td className="px-2 py-1.5 text-ink">{c.name}</td>
                         <td className="px-2 py-1.5">
                           <input
                             className={input}
@@ -662,7 +662,7 @@ export default function SalesPage() {
                           <button
                             type="button"
                             onClick={() => void removeChannel(c)}
-                            className="text-xs text-rose-300"
+                            className="text-xs text-loss"
                           >
                             삭제
                           </button>
@@ -679,7 +679,7 @@ export default function SalesPage() {
                       key={p.name}
                       type="button"
                       onClick={() => void addChannel(p)}
-                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300"
+                      className="rounded-lg border border-line-strong px-3 py-1.5 text-xs text-ink-soft"
                     >
                       + {p.name}
                     </button>

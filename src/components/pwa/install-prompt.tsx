@@ -38,15 +38,15 @@ export function InstallPrompt() {
   if (!deferred || hidden) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-20 z-40 rounded-xl border border-sky-500/40 bg-slate-950/95 p-3 shadow-lg backdrop-blur sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-80">
-      <p className="text-sm font-medium text-slate-100">MarginMap 설치</p>
-      <p className="mt-1 text-xs text-slate-400">
+    <div className="fixed inset-x-3 bottom-20 z-40 rounded-xl border border-accent/40 bg-surface/95 p-3 shadow-lg backdrop-blur sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-80">
+      <p className="text-sm font-medium text-ink">MarginMap 설치</p>
+      <p className="mt-1 text-xs text-muted">
         홈 화면에 추가하면 앱처럼 바로 열 수 있습니다.
       </p>
       <div className="mt-3 flex gap-2">
         <button
           type="button"
-          className="rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-medium text-slate-950"
+          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover"
           onClick={() => {
             void deferred.prompt().then(async () => {
               await deferred.userChoice;
@@ -58,7 +58,7 @@ export function InstallPrompt() {
         </button>
         <button
           type="button"
-          className="rounded-lg px-3 py-1.5 text-xs text-slate-400"
+          className="rounded-lg px-3 py-1.5 text-xs text-muted"
           onClick={() => setHidden(true)}
         >
           나중에

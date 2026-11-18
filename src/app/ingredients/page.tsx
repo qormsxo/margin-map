@@ -176,14 +176,14 @@ export default function IngredientsPage() {
     ? items.filter((i) => i.name.includes(search.trim()))
     : items;
 
-  const input = "rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm";
+  const input = "rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";
 
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Ingredients</p>
-        <h1 className="text-3xl font-semibold text-white">식재료</h1>
-        <p className="text-sm text-slate-400">
+        <p className="eyebrow uppercase">Ingredients</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">식재료</h1>
+        <p className="text-sm text-muted">
           한 번에 사는 양과 가격을 넣으면 1g·1ml·1개당 단가가 계산됩니다. 값이 바뀌면 목록에서 가격만
           고치세요. 이력이 남고, 오르면 바로 알림이 생깁니다.
         </p>
@@ -195,9 +195,9 @@ export default function IngredientsPage() {
 
       <form
         onSubmit={(e) => void create(e)}
-        className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+        className="space-y-3 rounded-xl border border-line bg-surface p-4"
       >
-        <h2 className="text-sm font-medium text-slate-200">새 식재료</h2>
+        <h2 className="text-sm font-medium text-ink">새 식재료</h2>
         <div className="grid gap-2 sm:grid-cols-[2fr_1fr_6rem_1.5fr_6rem]">
           <input
             ref={nameRef}
@@ -249,11 +249,11 @@ export default function IngredientsPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+            className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
           >
             추가 (Enter)
           </button>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-faint">
             수율은 손질 후 남는 비율입니다. 비워 두면 100%. 예: 양파 껍질 벗기면 90%
           </span>
         </div>
@@ -268,29 +268,29 @@ export default function IngredientsPage() {
         />
       ) : null}
 
-      <ul className="divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800">
+      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
         {visible.map((item) => (
           <li
             key={item.id}
-            className="flex flex-col gap-2 bg-slate-900/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
-              <div className="font-medium text-slate-100">{item.name}</div>
-              <div className="text-xs text-sky-300">
+              <div className="font-medium text-ink">{item.name}</div>
+              <div className="text-xs text-accent-ink">
                 1{UNIT_LABEL[item.baseUnit]}당 {formatUnitCost(item.currentUnitCost)}원
                 {item.yieldRate < 1 ? (
-                  <span className="ml-2 text-amber-300">
+                  <span className="ml-2 text-warn">
                     → 손질 후 {formatUnitCost(item.effectiveUnitCost)}원
                   </span>
                 ) : null}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
               <span>{formatPurchaseQty(item.purchaseQty, item.baseUnit)}에</span>
               <input
                 key={`${item.id}-p-${item.purchasePrice}`}
                 aria-label={`${item.name} 구매가`}
-                className="w-28 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-sm text-slate-100"
+                className="w-28 rounded border border-line-strong bg-surface px-2 py-1 text-right text-sm text-ink"
                 inputMode={inputModes.numeric}
                 defaultValue={item.purchasePrice.toLocaleString("ko-KR")}
                 onKeyDown={blurOnEnter}
@@ -300,7 +300,7 @@ export default function IngredientsPage() {
               <input
                 key={`${item.id}-y-${item.yieldRate}`}
                 aria-label={`${item.name} 수율`}
-                className="w-14 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-right text-sm text-slate-100"
+                className="w-14 rounded border border-line-strong bg-surface px-2 py-1 text-right text-sm text-ink"
                 inputMode={inputModes.decimal}
                 defaultValue={String(Math.round(item.yieldRate * 1000) / 10)}
                 onKeyDown={blurOnEnter}
@@ -311,11 +311,11 @@ export default function IngredientsPage() {
           </li>
         ))}
         {!loading && items.length === 0 && !error ? (
-          <li className="px-4 py-6 text-sm text-slate-500">식재료가 없습니다. 위에서 추가하세요.</li>
+          <li className="px-4 py-6 text-sm text-faint">식재료가 없습니다. 위에서 추가하세요.</li>
         ) : null}
       </ul>
 
-      <Link href="/dashboard" className="text-sm text-sky-300">
+      <Link href="/dashboard" className="text-sm text-accent-ink">
         ← 대시보드
       </Link>
     </div>
