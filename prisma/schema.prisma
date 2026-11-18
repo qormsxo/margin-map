@@ -51,6 +51,8 @@ model Store {
   organizationId String
   name           String
   currency       String   @default("KRW")
+  /// Chosen at onboarding (CHICKEN, CAFE, ...). Drives channel and ingredient suggestions.
+  businessType   String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

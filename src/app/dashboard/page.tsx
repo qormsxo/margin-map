@@ -1,9 +1,10 @@
+import { redirect } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { EmptyPanel } from "@/components/dashboard/empty-panel";
 import { SetupChecklist, isSetupComplete } from "@/components/dashboard/setup-checklist";
 import { AppError } from "@/lib/errors";
 import { getIntegratedDashboard } from "@/server/dashboard-service";
-import { getSetupStatus } from "@/server/store-service";
+import { getCurrentStore, getSetupStatus } from "@/server/store-service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,11 @@ export default async function DashboardPage() {
   try {
     const status = await getSetupStatus();
     const checklist = isSetupComplete(status) ? null : <SetupChecklist status={status} />;
+
+    // Brand-new store: pick the business type first (creates channels too).
+    if (status.channels === 0 && !(await getCurrentStore()).businessType) {
+      redirect("/onboarding");
+    }
 
     // Profit numbers need at least one sales channel (fees). Until then, only guide setup.
     if (status.channels === 0) {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { findBusinessType, type SuggestedIngredient } from "@/lib/business-types";
 import { apiFetch } from "@/lib/client-api";
 import { parseAmount } from "@/lib/parse-amount";
 import { useNumericInputMode } from "@/lib/use-numeric-input-mode";
@@ -59,6 +60,8 @@ export default function IngredientsPage() {
   const [yieldPercent, setYieldPercent] = useState("");
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestedIngredient[]>([]);
+  const priceRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     const result = await apiFetch<Ingredient[]>("/api/v1/ingredients");
@@ -77,7 +80,23 @@ export default function IngredientsPage() {
 
   useEffect(() => {
     void load();
+
+    if (new URLSearchParams(window.location.search).has("welcome")) {
+      setInfo("판매 채널을 준비했어요. 이제 재료부터 넣어 볼까요? 아래 칩을 누르면 빨라요.");
+    }
+
+    void apiFetch<{ businessType: string | null }>("/api/v1/store").then((res) => {
+      if (res.ok) setSuggestions(findBusinessType(res.data.businessType)?.ingredients ?? []);
+    });
   }, [load]);
+
+  // Tap a suggestion: name, unit and usual pack size are filled; only the price is left.
+  function applySuggestion(s: SuggestedIngredient) {
+    setName(s.name);
+    setPurchaseUnit(s.unit);
+    setPurchaseQty(String(s.qty));
+    priceRef.current?.focus();
+  }
 
   const qtyValue = parseAmount(purchaseQty);
   const priceValue = parseAmount(purchasePrice);
@@ -176,7 +195,9 @@ export default function IngredientsPage() {
     ? items.filter((i) => i.name.includes(search.trim()))
     : items;
 
-  const input = "rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";
+  const pendingSuggestions = suggestions.filter((sg) => !items.some((i) => i.name === sg.name));
+
+  const input = "min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";
 
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
@@ -198,6 +219,27 @@ export default function IngredientsPage() {
         className="space-y-3 rounded-xl border border-line bg-surface p-4"
       >
         <h2 className="text-sm font-medium text-ink">새 식재료</h2>
+        {pendingSuggestions.length > 0 ? (
+          <div className="space-y-1.5">
+            <p className="text-xs text-faint">자주 쓰는 재료 · 누르면 양과 단위가 채워지고 가격만 넣으면 됩니다</p>
+            <div className="flex flex-wrap gap-1.5">
+              {pendingSuggestions.map((sg) => (
+                <button
+                  key={sg.name}
+                  type="button"
+                  onClick={() => applySuggestion(sg)}
+                  className={`rounded-full border px-3 py-1 text-xs ${
+                    name === sg.name
+                      ? "border-accent bg-accent-soft font-semibold text-accent-ink"
+                      : "border-line-strong bg-surface text-ink-soft hover:border-brand hover:text-brand"
+                  }`}
+                >
+                  + {sg.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="grid gap-2 sm:grid-cols-[2fr_1fr_6rem_1.5fr_6rem]">
           <input
             ref={nameRef}
@@ -230,6 +272,7 @@ export default function IngredientsPage() {
             ))}
           </select>
           <input
+            ref={priceRef}
             className={input}
             inputMode={inputModes.numeric}
             placeholder="그 가격 (예: 13.4만)"

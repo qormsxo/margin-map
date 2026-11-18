@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { apiFetch } from "@/lib/client-api";
+import { CHANNEL_PRESETS } from "@/lib/business-types";
 import { parseAmount } from "@/lib/parse-amount";
 import { useNumericInputMode } from "@/lib/use-numeric-input-mode";
 
@@ -28,15 +29,7 @@ type Period = {
   orderCounts: Array<{ salesChannelId: string; orderCount: number }>;
 };
 
-/** 예시 요율. 실제 계약 요율로 고쳐 쓰도록 안내한다. */
-const PRESETS = [
-  { name: "홀", channelFeeRate: 0, paymentFeeRate: 0.015, deliveryFeeFixed: 0 },
-  { name: "배민", channelFeeRate: 0.078, paymentFeeRate: 0.03, deliveryFeeFixed: 2900 },
-  { name: "쿠팡이츠", channelFeeRate: 0.078, paymentFeeRate: 0.03, deliveryFeeFixed: 2900 },
-  { name: "요기요", channelFeeRate: 0.097, paymentFeeRate: 0.03, deliveryFeeFixed: 2900 },
-  { name: "땡겨요", channelFeeRate: 0.02, paymentFeeRate: 0.03, deliveryFeeFixed: 2900 },
-  { name: "포장", channelFeeRate: 0, paymentFeeRate: 0.015, deliveryFeeFixed: 0 },
-];
+const PRESETS = CHANNEL_PRESETS;
 
 const cellKey = (menuId: string, channelId: string) => `${menuId}:${channelId}`;
 
