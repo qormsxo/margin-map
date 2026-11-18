@@ -5,6 +5,9 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   AUTH_SECRET: z.string().min(16),
+}).refine((env) => env.NODE_ENV !== "production" || env.AUTH_SECRET.length >= 32, {
+  message: "AUTH_SECRET must be at least 32 characters in production",
+  path: ["AUTH_SECRET"],
 });
 
 export type Env = z.infer<typeof envSchema>;

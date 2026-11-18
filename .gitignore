@@ -48,3 +48,6 @@ next-env.d.ts
 # installed agent skills
 .agents/
 skills-lock.json
+
+# DB backups (scripts/backup.mjs)
+/backups
