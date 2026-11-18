@@ -5,7 +5,7 @@
 | 통화 | KRW |
 | 원칙 | 결정론적. 반올림 규칙은 아래 “정밀도” 절 |
 | 관련 문서 | [01 PRD](01-product-requirements.md), [05 데이터 모델](05-data-model.md) |
-| 제외 | 수율(손질 손실), 인건비·조리시간 비용 |
+| 제외 | 메뉴별 인건비·조리시간 배분 (수율·고정비·매입 근사는 [15](15-scope-change-yield-fixed-costs-purchases.md)) |
 
 ---
 
