@@ -9,11 +9,14 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
+import { assertLocalDatabase } from "./local-only.mjs";
 
 if (!process.argv.includes("--yes")) {
   console.log("매장 데이터를 전부 지웁니다(계정은 유지). 실행하려면 --yes 를 붙이세요.");
   process.exit(1);
 }
+
+assertLocalDatabase();
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
