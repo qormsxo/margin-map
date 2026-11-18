@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: margin-map-db
+    restart: unless-stopped
+    ports:
+      - "55432:5432"
+    environment:
+      POSTGRES_USER: marginmap
+      POSTGRES_PASSWORD: marginmap
+      POSTGRES_DB: marginmap
+    volumes:
+      - margin_map_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marginmap -d marginmap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  margin_map_pg:

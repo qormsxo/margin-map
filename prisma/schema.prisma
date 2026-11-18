@@ -1,0 +1,605 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Auth & tenancy ---
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships OrganizationMember[]
+  priceChanges IngredientPriceHistory[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members OrganizationMember[]
+  stores  Store[]
+}
+
+model OrganizationMember {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole @default(OWNER)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+enum MemberRole {
+  OWNER
+}
+
+model Store {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  currency       String   @default("KRW")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  ingredients          Ingredient[]
+  prepRecipes          PrepRecipe[]
+  menuItems            MenuItem[]
+  salesChannels        SalesChannel[]
+  salesPeriods         SalesPeriod[]
+  actualUsagePeriods   ActualUsagePeriod[]
+  costBasisSnapshots   CostBasisSnapshot[]
+  analysisRuns         AnalysisRun[]
+  weeklySnapshots      WeeklySnapshot[]
+  alerts               Alert[]
+  simulationScenarios  SimulationScenario[]
+  fixedCostItems       FixedCostItem[]
+  purchaseRecords      PurchaseRecord[]
+
+  @@index([organizationId])
+}
+
+// --- Master: ingredients ---
+
+enum BaseUnit {
+  G
+  ML
+  EA
+}
+
+enum TaxType {
+  TAXABLE
+  EXEMPT
+}
+
+enum PriceChangeSource {
+  MANUAL
+  CSV_IMPORT
+  AI_ASSIST_CONFIRMED
+}
+
+model Ingredient {
+  id              String   @id @default(cuid())
+  storeId         String
+  name            String
+  baseUnit        BaseUnit
+  purchaseQty     Decimal  @db.Decimal(18, 6)
+  purchasePrice   Decimal  @db.Decimal(18, 2)
+  taxType         TaxType
+  currentUnitCost Decimal  @db.Decimal(18, 6)
+  /// 손질 수율 (0 < yieldRate <= 1). Recipe qty is usable qty.
+  yieldRate       Decimal  @default(1) @db.Decimal(8, 6)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store              Store                     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  priceHistory       IngredientPriceHistory[]
+  recipeLines        RecipeLine[]              @relation("IngredientInRecipe")
+  actualUsageLines   ActualUsageLine[]
+  costBasisRows      CostBasisIngredient[]
+  varianceResults    VarianceResult[]
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+model IngredientPriceHistory {
+  id                     String            @id @default(cuid())
+  ingredientId           String
+  previousUnitCost       Decimal           @db.Decimal(18, 6)
+  newUnitCost            Decimal           @db.Decimal(18, 6)
+  previousPurchasePrice  Decimal?          @db.Decimal(18, 2)
+  newPurchasePrice       Decimal?          @db.Decimal(18, 2)
+  previousPurchaseQty    Decimal?          @db.Decimal(18, 6)
+  newPurchaseQty         Decimal?          @db.Decimal(18, 6)
+  effectiveAt            DateTime
+  recordedAt             DateTime          @default(now())
+  source                 PriceChangeSource
+  createdByUserId        String?
+
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  createdBy   User?      @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([ingredientId, effectiveAt(sort: Desc)])
+}
+
+// --- Master: menus / prep / recipes ---
+
+model PrepRecipe {
+  id        String   @id @default(cuid())
+  storeId   String
+  name      String
+  yieldQty  Decimal  @db.Decimal(18, 6)
+  yieldUnit BaseUnit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store            Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  lines            RecipeLine[] @relation("PrepOwnsLines")
+  usedAsComponent  RecipeLine[] @relation("PrepAsComponent")
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+model MenuItem {
+  id               String   @id @default(cuid())
+  storeId          String
+  name             String
+  sellingPrice     Decimal  @db.Decimal(18, 2)
+  vatInclusive     Boolean  @default(true)
+  isActive         Boolean  @default(true)
+  defaultChannelId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  store            Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  defaultChannel   SalesChannel?      @relation("MenuDefaultChannel", fields: [defaultChannelId], references: [id], onDelete: SetNull)
+  lines            RecipeLine[]       @relation("MenuOwnsLines")
+  priceHistory     MenuPriceHistory[]
+  channelPrices    MenuChannelPrice[]
+  salesLines       SalesLine[]
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+enum RecipeOwnerType {
+  MENU
+  PREP
+}
+
+enum RecipeComponentType {
+  INGREDIENT
+  PREP
+}
+
+model RecipeLine {
+  id              String              @id @default(cuid())
+  ownerType       RecipeOwnerType
+  menuItemId      String?
+  prepRecipeId    String?
+  componentType   RecipeComponentType
+  ingredientId    String?
+  componentPrepId String?
+  qty             Decimal             @db.Decimal(18, 6)
+  unit            BaseUnit
+
+  menuItem      MenuItem?   @relation("MenuOwnsLines", fields: [menuItemId], references: [id], onDelete: Cascade)
+  prepRecipe    PrepRecipe? @relation("PrepOwnsLines", fields: [prepRecipeId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient? @relation("IngredientInRecipe", fields: [ingredientId], references: [id], onDelete: Restrict)
+  componentPrep PrepRecipe? @relation("PrepAsComponent", fields: [componentPrepId], references: [id], onDelete: Restrict)
+
+  @@index([menuItemId])
+  @@index([prepRecipeId])
+  @@index([ingredientId])
+  @@index([componentPrepId])
+}
+
+enum MenuPriceSource {
+  MANUAL
+  SIMULATION_APPLY
+}
+
+model MenuPriceHistory {
+  id            String          @id @default(cuid())
+  menuItemId    String
+  previousPrice Decimal         @db.Decimal(18, 2)
+  newPrice      Decimal         @db.Decimal(18, 2)
+  channelId     String?
+  effectiveAt   DateTime
+  source        MenuPriceSource
+  recordedAt    DateTime        @default(now())
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@index([menuItemId, effectiveAt(sort: Desc)])
+}
+
+// --- Channels ---
+
+enum FeeBasis {
+  PER_MENU_ITEM
+}
+
+model SalesChannel {
+  id               String   @id @default(cuid())
+  storeId          String
+  name             String
+  channelFeeRate   Decimal  @db.Decimal(8, 6)
+  paymentFeeRate   Decimal  @db.Decimal(8, 6)
+  deliveryFeeRate  Decimal  @db.Decimal(8, 6)
+  deliveryFeeFixed Decimal  @db.Decimal(18, 2)
+  feeBasis         FeeBasis @default(PER_MENU_ITEM)
+  isDefault        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  store            Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  menuPrices       MenuChannelPrice[]
+  defaultForMenus  MenuItem[]         @relation("MenuDefaultChannel")
+  salesLines       SalesLine[]
+  orderCounts      SalesOrderCount[]
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+model MenuChannelPrice {
+  id             String  @id @default(cuid())
+  menuItemId     String
+  salesChannelId String
+  sellingPrice   Decimal @db.Decimal(18, 2)
+
+  menuItem     MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, salesChannelId])
+}
+
+// --- Facts: sales & actual usage (no estimates) ---
+
+enum PeriodGrain {
+  DAY
+  WEEK
+  MONTH
+  CUSTOM
+}
+
+enum FactSource {
+  MANUAL
+  CSV_IMPORT
+}
+
+model SalesPeriod {
+  id          String      @id @default(cuid())
+  storeId     String
+  periodStart DateTime    @db.Date
+  periodEnd   DateTime    @db.Date
+  grain       PeriodGrain
+  createdAt   DateTime    @default(now())
+
+  store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  lines       SalesLine[]
+  orderCounts SalesOrderCount[]
+
+  @@unique([storeId, periodStart, periodEnd])
+  @@index([storeId])
+}
+
+model SalesLine {
+  id             String     @id @default(cuid())
+  periodId       String
+  menuItemId     String
+  salesChannelId String?
+  qty            Decimal    @db.Decimal(18, 3)
+  source         FactSource
+  importedFileName String?
+  createdAt      DateTime   @default(now())
+
+  period       SalesPeriod   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  salesChannel SalesChannel? @relation(fields: [salesChannelId], references: [id], onDelete: SetNull)
+
+  @@unique([periodId, menuItemId, salesChannelId])
+  @@index([periodId])
+}
+
+/// 기간·채널별 주문 건수. 있으면 배달비(deliveryFeeFixed)를 메뉴 개수가 아니라 주문 건수로 뺀다.
+model SalesOrderCount {
+  id             String     @id @default(cuid())
+  periodId       String
+  salesChannelId String
+  orderCount     Int
+  source         FactSource @default(MANUAL)
+  createdAt      DateTime   @default(now())
+
+  period       SalesPeriod  @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, salesChannelId])
+}
+
+model ActualUsagePeriod {
+  id                   String   @id @default(cuid())
+  storeId              String
+  periodStart          DateTime @db.Date
+  periodEnd            DateTime @db.Date
+  alignedSalesPeriodId String?
+  note                 String?
+  createdAt            DateTime @default(now())
+
+  store Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  lines ActualUsageLine[]
+
+  @@unique([storeId, periodStart, periodEnd])
+  @@index([storeId])
+}
+
+model ActualUsageLine {
+  id           String     @id @default(cuid())
+  periodId     String
+  ingredientId String
+  actualQty    Decimal?   @db.Decimal(18, 6)
+  actualCost   Decimal?   @db.Decimal(18, 2)
+  unit         BaseUnit?
+  source       FactSource
+  createdAt    DateTime   @default(now())
+
+  period     ActualUsagePeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  ingredient Ingredient        @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@unique([periodId, ingredientId])
+}
+
+// --- Snapshots & analysis (audit) ---
+
+enum CostBasisType {
+  AS_OF
+  PERIOD_END
+  WEEKLY
+}
+
+model CostBasisSnapshot {
+  id           String        @id @default(cuid())
+  storeId      String
+  label        String?
+  basisType    CostBasisType
+  asOfAt       DateTime
+  periodStart  DateTime?     @db.Date
+  periodEnd    DateTime?     @db.Date
+  weekStart    DateTime?     @db.Date
+  channelId    String?
+  basisVersion String
+  createdAt    DateTime      @default(now())
+
+  store          Store                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  ingredients    CostBasisIngredient[]
+  recipeLines    CostBasisRecipeLine[]
+  analysisRuns   AnalysisRun[]
+  weeklySnapshots WeeklySnapshot[]
+
+  @@index([storeId, asOfAt])
+  @@index([storeId, weekStart])
+}
+
+model CostBasisIngredient {
+  id             String  @id @default(cuid())
+  snapshotId     String
+  ingredientId   String
+  unitCost       Decimal @db.Decimal(18, 6)
+  purchasePrice  Decimal @db.Decimal(18, 2)
+  purchaseQty    Decimal @db.Decimal(18, 6)
+  yieldRate      Decimal @default(1) @db.Decimal(8, 6)
+
+  snapshot   CostBasisSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  ingredient Ingredient        @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@unique([snapshotId, ingredientId])
+}
+
+model CostBasisRecipeLine {
+  id              String              @id @default(cuid())
+  snapshotId      String
+  ownerType       RecipeOwnerType
+  menuItemId      String?
+  prepRecipeId    String?
+  componentType   RecipeComponentType
+  ingredientId    String?
+  componentPrepId String?
+  qty             Decimal             @db.Decimal(18, 6)
+  unit            BaseUnit
+
+  snapshot CostBasisSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([snapshotId])
+}
+
+enum AnalysisType {
+  VARIANCE
+  CONTRIBUTION
+  WEEKLY
+  PRICE_IMPACT
+}
+
+enum AnalysisStatus {
+  COMPLETED
+  INSUFFICIENT_DATA
+  FAILED
+}
+
+model AnalysisRun {
+  id                   String         @id @default(cuid())
+  storeId              String
+  type                 AnalysisType
+  periodStart          DateTime?      @db.Date
+  periodEnd            DateTime?      @db.Date
+  costBasisSnapshotId  String?
+  salesPeriodId        String?
+  actualUsagePeriodId  String?
+  status               AnalysisStatus
+  insufficientReason   String?
+  evidenceJson         Json?
+  createdAt            DateTime       @default(now())
+
+  store              Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  costBasisSnapshot  CostBasisSnapshot? @relation(fields: [costBasisSnapshotId], references: [id], onDelete: SetNull)
+  varianceResults    VarianceResult[]
+  alerts             Alert[]
+
+  @@index([storeId, createdAt(sort: Desc)])
+}
+
+model VarianceResult {
+  id            String   @id @default(cuid())
+  analysisRunId String
+  ingredientId  String
+  theoQty       Decimal? @db.Decimal(18, 6)
+  theoAmt       Decimal? @db.Decimal(18, 2)
+  actualQty     Decimal? @db.Decimal(18, 6)
+  actualCost    Decimal? @db.Decimal(18, 2)
+  actualAmt     Decimal? @db.Decimal(18, 2)
+  varianceQty   Decimal? @db.Decimal(18, 6)
+  varianceAmt   Decimal? @db.Decimal(18, 2)
+  varianceRate  Decimal? @db.Decimal(18, 6)
+  unitCostUsed  Decimal  @db.Decimal(18, 6)
+
+  analysisRun AnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Cascade)
+  ingredient  Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([analysisRunId])
+}
+
+// --- Weekly alerts ---
+
+enum AlertSeverity {
+  INFO
+  WARN
+}
+
+model WeeklySnapshot {
+  id                   String   @id @default(cuid())
+  storeId              String
+  weekStart            DateTime @db.Date
+  weekEnd              DateTime @db.Date
+  channelId            String?
+  costBasisSnapshotId  String?
+  priorWeekStart       DateTime? @db.Date
+  priorSnapshotId      String?
+  basisVersion         String
+  dataSufficient       Boolean
+  insufficientReason   String?
+  metricsJson          Json?
+  createdAt            DateTime @default(now())
+
+  store             Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  costBasisSnapshot CostBasisSnapshot? @relation(fields: [costBasisSnapshotId], references: [id], onDelete: SetNull)
+  alerts            Alert[]
+
+  @@unique([storeId, weekStart, channelId, basisVersion])
+  @@index([storeId])
+}
+
+model Alert {
+  id               String        @id @default(cuid())
+  storeId          String
+  weekStart        DateTime      @db.Date
+  ruleId           String
+  weeklySnapshotId String?
+  analysisRunId    String?
+  severity         AlertSeverity
+  title            String
+  body             String
+  entityType       String?
+  entityId         String?
+  evidenceJson     Json?
+  acknowledgedAt   DateTime?
+  createdAt        DateTime      @default(now())
+
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  weeklySnapshot WeeklySnapshot? @relation(fields: [weeklySnapshotId], references: [id], onDelete: SetNull)
+  analysisRun    AnalysisRun?    @relation(fields: [analysisRunId], references: [id], onDelete: SetNull)
+
+  @@index([storeId, weekStart])
+  @@index([storeId, acknowledgedAt])
+}
+
+// --- Simulation (isolated from operational data) ---
+
+enum SimulationStatus {
+  DRAFT
+  APPLIED
+  DISCARDED
+}
+
+model SimulationScenario {
+  id              String           @id @default(cuid())
+  storeId         String
+  name            String
+  draft           Json
+  status          SimulationStatus @default(DRAFT)
+  appliedAt       DateTime?
+  applyResultJson Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+}
+
+// --- Store-level fixed costs (never allocated to menus) ---
+
+enum FixedCostCategory {
+  LABOR
+  RENT
+  UTILITIES
+  OTHER
+}
+
+model FixedCostItem {
+  id            String            @id @default(cuid())
+  storeId       String
+  name          String
+  category      FixedCostCategory
+  monthlyAmount Decimal           @db.Decimal(18, 2)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+// --- Purchases (매입) for purchase-based actual food cost ---
+
+model PurchaseRecord {
+  id          String     @id @default(cuid())
+  storeId     String
+  purchasedOn DateTime   @db.Date
+  amount      Decimal    @db.Decimal(18, 2)
+  supplier    String?
+  note        String?
+  source      FactSource @default(MANUAL)
+  createdAt   DateTime   @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, purchasedOn])
+}
