@@ -1,4 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { site } from "@/lib/site";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: site.name,
+  alternateName: site.koreanName,
+  url: site.url,
+  description: site.description,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web, Android, iOS",
+  inLanguage: "ko",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
+};
 
 const features = [
   {
@@ -18,6 +37,11 @@ const features = [
 export default function HomePage() {
   return (
     <div className="space-y-14 pb-16">
+      <script
+        type="application/ld+json"
+        // JSON-LD for search engines; content is our own static object.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="grid items-center gap-10 pt-4 lg:grid-cols-2 lg:pt-10">
         <div className="space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
