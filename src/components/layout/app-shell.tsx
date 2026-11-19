@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/logo";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { LogoutButton } from "@/components/layout/logout-button";
@@ -24,27 +25,8 @@ async function currentStoreName(): Promise<string | null> {
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const storeName = await currentStoreName();
 
-  if (storeName === null) {
-    return (
-      <div className="min-h-dvh">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/">
-            <Logo tone="dark" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="rounded-full p-2 text-muted hover:bg-subtle hover:text-ink" />
-            <Link
-              href="/login"
-              className="rounded-full bg-brand-solid px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-            >
-              로그인
-            </Link>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">{children}</main>
-      </div>
-    );
-  }
+  // Every page in the app area needs a store; signed out (or stale session) goes to login.
+  if (storeName === null) redirect("/login");
 
   return (
     <div className="min-h-dvh">

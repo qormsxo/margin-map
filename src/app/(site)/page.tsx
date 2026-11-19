@@ -139,7 +139,7 @@ export default function HomePage() {
             <p className="relative text-sm text-pine-200">11월 진짜 남은 돈</p>
             <p className="relative mt-2 text-5xl font-bold tracking-tight">6,480,860원</p>
             <div className="relative mt-6 h-2.5 overflow-hidden rounded-full bg-pine-950/60">
-              <div className="h-full w-[78%] rounded-full bg-accent" />
+              <div className="h-full w-full rounded-full bg-accent" />
             </div>
             <p className="relative mt-2 text-xs text-pine-200">손익분기 매출 128% 달성</p>
           </div>

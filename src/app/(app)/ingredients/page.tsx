@@ -62,6 +62,7 @@ export default function IngredientsPage() {
   const [busy, setBusy] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestedIngredient[]>([]);
   const priceRef = useRef<HTMLInputElement>(null);
+  const unitFromSuggestion = useRef(false);
 
   const load = useCallback(async () => {
     const result = await apiFetch<Ingredient[]>("/api/v1/ingredients");
@@ -94,6 +95,7 @@ export default function IngredientsPage() {
   function applySuggestion(s: SuggestedIngredient) {
     setName(s.name);
     setPurchaseUnit(s.unit);
+    unitFromSuggestion.current = true;
     setPurchaseQty(String(s.qty));
     priceRef.current?.focus();
   }
@@ -135,7 +137,11 @@ export default function IngredientsPage() {
       return;
     }
 
-    // Keep the unit (the next item is usually bought the same way); clear the rest.
+    // Keep a unit the owner picked (the next item is usually bought the same way),
+    // but not one a suggestion chip filled in: 포장용기 "개" must not carry over to 대파.
+    if (unitFromSuggestion.current) setPurchaseUnit("KG");
+
+    unitFromSuggestion.current = false;
     setName("");
     setPurchaseQty("");
     setPurchasePrice("");
@@ -262,7 +268,10 @@ export default function IngredientsPage() {
             onChange={(e) => {
               const next = PURCHASE_UNITS.find((u) => u.value === e.target.value);
 
-              if (next) setPurchaseUnit(next.value);
+              if (!next) return;
+
+              setPurchaseUnit(next.value);
+              unitFromSuggestion.current = false;
             }}
           >
             {PURCHASE_UNITS.map((u) => (

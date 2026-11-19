@@ -76,6 +76,7 @@ export function OnboardingForm() {
               type="button"
               onClick={() => pickType(t.id)}
               aria-pressed={active}
+              aria-label={t.label}
               className={`card flex flex-col items-start gap-2 p-4 text-left ${
                 active ? "border-accent ring-2 ring-accent/30" : "hover:-translate-y-0.5 hover:shadow-lift"
               }`}
