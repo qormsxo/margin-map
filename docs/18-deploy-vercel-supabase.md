@@ -7,14 +7,19 @@
 1. **New project**를 만듭니다.
    - **Region:** `Northeast Asia (Seoul)`
    - **Database password:** 따로 저장해 둡니다.
-2. 프로젝트 화면 위쪽의 **Connect** 버튼을 누르고, 다음 두 주소를 복사합니다.
-   - **Transaction pooler** (포트 6543) → 아래 3번의 `DATABASE_URL`
-   - **Session pooler** (포트 5432) → `DIRECT_URL`. 끝에 `?sslmode=require`를 붙입니다.
+2. 프로젝트 화면 위쪽 **Connect → ORMs 탭 → Prisma**를 고릅니다. (처음 보이는 App Frameworks 탭의 `NEXT_PUBLIC_SUPABASE_*` 값은 supabase-js용이라 쓰지 않습니다.)
+   - `DATABASE_URL` (포트 6543, `?pgbouncer=true`) → 그대로 사용
+   - `DIRECT_URL` (포트 5432) → 끝에 `?sslmode=require`를 붙입니다.
 3. 주소 안의 `[YOUR-PASSWORD]`는 1번에서 정한 비밀번호로 바꿉니다.
 
 `DATABASE_URL`에는 `sslmode`를 붙이지 않습니다. 앱이 코드에서 TLS를 켭니다 (`src/lib/prisma.ts`).
 
-## 2. 테이블 만들기 (내 PC에서 한 번)
+## 2. 테이블 만들기
+
+> 현재 프로젝트(서울, `ikkraizfonomflswzuod`)는 2026-11-19에 마이그레이션 4개가 적용돼 있고 `_prisma_migrations`에도 기록돼 있습니다. 다음 스키마 변경부터 아래 명령을 씁니다.
+
+또, Supabase는 `public` 테이블을 공개 REST API로 노출하므로 모든 테이블에 RLS를 켜고 `anon`/`authenticated` 권한을 빼 두었습니다. 앱은 테이블 소유자(postgres)로 접속해 영향이 없습니다. 새 테이블은 기본 권한에서 빠지지만, 마이그레이션 후 Supabase **Advisors**에서 경고가 없는지 한 번 확인합니다.
+
 
 PowerShell:
 
