@@ -11,7 +11,15 @@ export type ContributionQuadrant =
   | "HIGH_SALES_LOW_CONTRIB"
   | "LOW_SALES_HIGH_CONTRIB"
   | "HIGH_SALES_HIGH_CONTRIB"
-  | "LOW_SALES_LOW_CONTRIB";
+  | "LOW_SALES_LOW_CONTRIB"
+  /** Too few menus to compare, or too close to the median to call either way. */
+  | "BALANCED";
+
+/** A median split needs something to split: fewer menus than this are never labelled. */
+export const MIN_MENUS_FOR_QUADRANT = 3;
+
+/** A menu counts as high/low only when it is at least this far (relative) from the median. */
+export const QUADRANT_TOLERANCE = 0.1;
 
 export type ContributionSalesRow = {
   menuItemId: string;
@@ -47,22 +55,30 @@ function median(values: number[]): number {
   return sorted[mid]!;
 }
 
+function side(value: number, median: number): "HIGH" | "LOW" | "MID" {
+  const margin = Math.abs(median) * QUADRANT_TOLERANCE;
+
+  if (value > median + margin) return "HIGH";
+
+  if (value < median - margin) return "LOW";
+
+  return "MID";
+}
+
 function classifyQuadrant(
   salesQty: number,
   contributionPerUnit: number,
   salesMedian: number,
   contribMedian: number,
 ): ContributionQuadrant {
-  const highSales = salesQty >= salesMedian;
-  const highContrib = contributionPerUnit >= contribMedian;
+  const sales = side(salesQty, salesMedian);
+  const contrib = side(contributionPerUnit, contribMedian);
 
-  if (highSales && !highContrib) return "HIGH_SALES_LOW_CONTRIB";
+  if (sales === "MID" || contrib === "MID") return "BALANCED";
 
-  if (!highSales && highContrib) return "LOW_SALES_HIGH_CONTRIB";
+  if (sales === "HIGH") return contrib === "HIGH" ? "HIGH_SALES_HIGH_CONTRIB" : "HIGH_SALES_LOW_CONTRIB";
 
-  if (highSales && highContrib) return "HIGH_SALES_HIGH_CONTRIB";
-
-  return "LOW_SALES_LOW_CONTRIB";
+  return contrib === "HIGH" ? "LOW_SALES_HIGH_CONTRIB" : "LOW_SALES_LOW_CONTRIB";
 }
 
 /**
@@ -92,12 +108,10 @@ export function analyzeContributionBySales(
       salesQty: row.salesQty,
       contributionPerUnit: roundMoney(row.contributionPerUnit),
       totalContribution,
-      quadrant: classifyQuadrant(
-        row.salesQty,
-        row.contributionPerUnit,
-        salesMedian,
-        contribMedian,
-      ),
+      quadrant:
+        rows.length < MIN_MENUS_FOR_QUADRANT
+          ? ("BALANCED" as const)
+          : classifyQuadrant(row.salesQty, row.contributionPerUnit, salesMedian, contribMedian),
     };
   });
 
