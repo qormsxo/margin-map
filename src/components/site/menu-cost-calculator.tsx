@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseAmount } from "@/lib/parse-amount";
 
 type Line = { id: number; name: string; cost: string };
@@ -29,6 +29,28 @@ export function MenuCostCalculator() {
   const [channelId, setChannelId] = useState("hall");
   const [customRate, setCustomRate] = useState("");
   const [customPerOrder, setCustomPerOrder] = useState("");
+
+  // Shareable links: ?price=9000&items=떡볶이:1630,순대:1200&channel=delivery
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const items = q.get("items");
+
+    if (q.get("price")) setPrice(q.get("price") ?? "");
+
+    if (items) {
+      setLines(
+        items.split(",").map((pair, i) => {
+          const [name = "", cost = ""] = pair.split(":");
+
+          return { id: i + 1, name, cost };
+        }),
+      );
+    }
+
+    const channel = q.get("channel");
+
+    if (channel && CHANNELS.some((c) => c.id === channel)) setChannelId(channel);
+  }, []);
 
   const sellingPrice = parseAmount(price) ?? 0;
   const ingredientCost = lines.reduce((sum, l) => sum + (parseAmount(l.cost) ?? 0), 0);
