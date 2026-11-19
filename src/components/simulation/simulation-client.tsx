@@ -156,11 +156,11 @@ export function SimulationClient() {
     setRequiredPrice(result.data.requiredSellingPrice);
   }
 
-  const inputClass = "w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2";
+  const inputClass = "w-full rounded-lg border border-line-strong bg-subtle px-3 py-2";
 
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-muted">
         여기서 바꾼 값은 저장되지 않습니다. 마음껏 바꿔 보세요.
       </p>
 
@@ -173,7 +173,7 @@ export function SimulationClient() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="text-slate-400">판매 채널</span>
+          <span className="text-muted">판매 채널</span>
           <select
             className={inputClass}
             value={channelId}
@@ -187,7 +187,7 @@ export function SimulationClient() {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="text-slate-400">모든 메뉴 가격을 (원) 올리거나 내리기</span>
+          <span className="text-muted">모든 메뉴 가격을 (원) 올리거나 내리기</span>
           <input
             className={inputClass}
             inputMode={inputModes.numeric}
@@ -197,7 +197,7 @@ export function SimulationClient() {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="text-slate-400">채널 수수료를 바꿔 보기 (%, 선택)</span>
+          <span className="text-muted">채널 수수료를 바꿔 보기 (%, 선택)</span>
           <input
             className={inputClass}
             inputMode={inputModes.decimal}
@@ -212,15 +212,15 @@ export function SimulationClient() {
         type="button"
         disabled={busy || !channelId}
         onClick={() => void runPreview()}
-        className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
       >
         바꾸기 전후 비교
       </button>
 
       {preview ? (
-        <div className="overflow-auto rounded-xl border border-slate-800">
+        <div className="overflow-auto rounded-xl border border-line">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-900 text-slate-400">
+            <thead className="bg-subtle text-muted">
               <tr>
                 <th className="px-3 py-2">메뉴</th>
                 <th className="px-3 py-2">지금 남는 돈</th>
@@ -234,11 +234,11 @@ export function SimulationClient() {
                 const diff = row.after.contribution - row.before.contribution;
 
                 return (
-                  <tr key={row.menuItemId} className="border-t border-slate-800">
-                    <td className="px-3 py-2 text-slate-200">{row.name}</td>
+                  <tr key={row.menuItemId} className="border-t border-line">
+                    <td className="px-3 py-2 text-ink">{row.name}</td>
                     <td className="px-3 py-2">{won(row.before.contribution)}</td>
                     <td className="px-3 py-2">{won(row.after.contribution)}</td>
-                    <td className={`px-3 py-2 ${diff < 0 ? "text-rose-300" : "text-emerald-300"}`}>
+                    <td className={`px-3 py-2 ${diff < 0 ? "text-loss" : "text-gain"}`}>
                       {diff > 0 ? "+" : ""}
                       {won(diff)}
                     </td>
@@ -255,13 +255,13 @@ export function SimulationClient() {
         </div>
       ) : null}
 
-      <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-        <h2 className="text-sm font-medium text-slate-200">
+      <section className="space-y-3 rounded-xl border border-line bg-surface p-4">
+        <h2 className="text-sm font-medium text-ink">
           원하는 마진율을 내려면 얼마에 팔아야 할까?
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="text-slate-400">메뉴</span>
+            <span className="text-muted">메뉴</span>
             <select
               className={inputClass}
               value={menuId}
@@ -275,7 +275,7 @@ export function SimulationClient() {
             </select>
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-slate-400">목표 마진율 (%)</span>
+            <span className="text-muted">목표 마진율 (%)</span>
             <input
               className={inputClass}
               inputMode={inputModes.decimal}
@@ -289,12 +289,12 @@ export function SimulationClient() {
           type="button"
           disabled={busy || !channelId || !menuId || targetPercent === ""}
           onClick={() => void runRequiredPrice()}
-          className="rounded-lg border border-sky-500/50 px-4 py-2 text-sm text-sky-300 disabled:opacity-40"
+          className="rounded-lg border border-accent/50 px-4 py-2 text-sm text-accent-ink disabled:opacity-40"
         >
           필요한 판매가 계산
         </button>
         {requiredPrice !== null ? (
-          <p className="text-lg text-white">{won(requiredPrice)}</p>
+          <p className="text-lg text-ink">{won(requiredPrice)}</p>
         ) : null}
       </section>
     </div>

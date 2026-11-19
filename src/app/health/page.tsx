@@ -20,12 +20,12 @@ export default async function HealthPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-white">시스템 상태</h1>
+      <h1 className="text-2xl font-semibold text-ink">시스템 상태</h1>
       <div
         className={`rounded-xl border p-5 ${
           db.ok
-            ? "border-emerald-800/80 bg-emerald-950/40 text-emerald-100"
-            : "border-rose-800/80 bg-rose-950/40 text-rose-100"
+            ? "border-gain/30 bg-gain-soft text-gain"
+            : "border-loss/30 bg-loss-soft text-loss"
         }`}
       >
         <p className="text-sm opacity-80">서버 연결</p>

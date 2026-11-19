@@ -1,29 +1,10 @@
 import Link from "next/link";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { LogoutButton } from "@/components/layout/logout-button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BottomNav, MobileMoreLinks, SidebarNav } from "@/components/layout/nav-links";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-
-const nav = [
-  { href: "/dashboard", label: "홈" },
-  { href: "/ingredients", label: "재료" },
-  { href: "/menus", label: "메뉴" },
-  { href: "/sales", label: "판매" },
-  { href: "/contribution", label: "이익" },
-  { href: "/purchases", label: "매입" },
-];
-
-const desktopNav = [
-  { href: "/dashboard", label: "대시보드" },
-  { href: "/ingredients", label: "식재료" },
-  { href: "/menus", label: "메뉴" },
-  { href: "/sales", label: "판매량" },
-  { href: "/contribution", label: "이익" },
-  { href: "/fixed-costs", label: "고정비" },
-  { href: "/purchases", label: "매입" },
-  { href: "/alerts", label: "이상징후" },
-  { href: "/simulation", label: "시뮬" },
-];
 
 /** Signed-in store name, or null when signed out (or the session points to a deleted store). */
 async function currentStoreName(): Promise<string | null> {
@@ -39,75 +20,94 @@ async function currentStoreName(): Promise<string | null> {
   return store?.name ?? null;
 }
 
+function Logo({ tone }: { tone: "light" | "dark" }) {
+  return (
+    <span className="flex items-center gap-2">
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-sm font-black text-white">
+        M
+      </span>
+      <span
+        className={`text-[17px] font-bold tracking-tight ${tone === "light" ? "text-white" : "text-heading"}`}
+      >
+        MarginMap
+      </span>
+    </span>
+  );
+}
+
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const storeName = await currentStoreName();
-  const signedIn = storeName !== null;
+
+  if (storeName === null) {
+    return (
+      <div className="min-h-dvh">
+        <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <Link href="/">
+            <Logo tone="dark" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="rounded-full p-2 text-muted hover:bg-subtle hover:text-ink" />
+            <Link
+              href="/login"
+              className="rounded-full bg-brand-solid px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              로그인
+            </Link>
+          </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">{children}</main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_#1e293b_0%,_transparent_55%)]" />
-      <header className="relative border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
-          <Link
-            href={signedIn ? "/dashboard" : "/"}
-            className="text-lg font-semibold tracking-tight text-sky-300"
-          >
-            MarginMap
+    <div className="min-h-dvh">
+      {/* Desktop: Pine sidebar (the 30% color). */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-pine-900 px-3 py-5 lg:flex">
+        <Link href="/dashboard" className="px-3 pb-7">
+          <Logo tone="light" />
+        </Link>
+        <div className="flex-1 overflow-y-auto">
+          <SidebarNav />
+        </div>
+        <div className="mt-4 rounded-xl bg-pine-950/60 p-3">
+          <p className="text-[11px] text-pine-300">내 매장</p>
+          <p className="truncate text-sm font-semibold text-white" title={storeName}>
+            {storeName}
+          </p>
+          <div className="mt-2 flex items-center justify-between">
+            <LogoutButton className="text-xs text-pine-300 hover:text-white disabled:opacity-40" />
+            <ThemeToggle className="rounded-md p-1 text-pine-300 hover:bg-pine-800 hover:text-white" />
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile: top bar. */}
+      <header className="sticky top-0 z-20 bg-canvas/90 backdrop-blur lg:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link href="/dashboard">
+            <Logo tone="dark" />
           </Link>
-          {signedIn ? (
-            <nav className="hidden items-center gap-1 text-sm text-slate-300 lg:flex">
-              {desktopNav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-md px-2 py-1 hover:bg-slate-800 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
-          <div className="flex items-center gap-3 text-sm">
-            {signedIn ? (
-              <>
-                <span className="max-w-32 truncate text-slate-400" title={storeName}>
-                  {storeName}
-                </span>
-                <LogoutButton className="rounded-md px-2 py-1 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-40" />
-              </>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-md bg-sky-500 px-3 py-1.5 font-medium text-slate-950 hover:bg-sky-400"
-              >
-                로그인
-              </Link>
-            )}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="max-w-28 truncate rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand">
+              {storeName}
+            </span>
+            <ThemeToggle className="rounded-full p-1.5 text-muted hover:bg-subtle hover:text-ink" />
+            <LogoutButton className="text-xs text-faint hover:text-ink disabled:opacity-40" />
           </div>
         </div>
       </header>
+      <div className="pt-1 lg:hidden">
+        <MobileMoreLinks />
+      </div>
 
-      <main className={`relative mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10 ${signedIn ? "pb-24 lg:pb-10" : ""}`}>
-        {children}
-      </main>
+      <div className="lg:pl-60">
+        <main className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-8 lg:py-10 lg:pb-12">
+          <div className="animate-rise">{children}</div>
+        </main>
+      </div>
 
-      {signedIn ? (
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-800 bg-slate-950/95 backdrop-blur lg:hidden">
-          <ul className="mx-auto grid max-w-lg grid-cols-6 gap-1 px-1 py-2 text-center text-[11px] text-slate-400">
-            {nav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block rounded-md px-1 py-1 hover:bg-slate-900 hover:text-sky-300"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ) : null}
-
+      <BottomNav />
       <InstallPrompt />
     </div>
   );

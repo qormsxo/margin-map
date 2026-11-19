@@ -12,16 +12,14 @@ export function EmptyPanel({
   action?: { href: string; label: string };
 }) {
   return (
-    <section className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-5">
-      <h2 className="text-sm font-medium text-slate-200">{title}</h2>
-      <p className="mt-2 text-sm text-slate-400">{message}</p>
-      {requiredInput ? (
-        <p className="mt-2 text-sm text-amber-200/90">{requiredInput}</p>
-      ) : null}
+    <section className="rounded-2xl border border-dashed border-line-strong bg-surface/60 p-5">
+      <h2 className="text-base font-bold text-heading">{title}</h2>
+      <p className="mt-1.5 text-sm text-muted">{message}</p>
+      {requiredInput ? <p className="mt-2 text-sm font-medium text-ink-soft">→ {requiredInput}</p> : null}
       {action ? (
         <Link
           href={action.href}
-          className="mt-3 inline-block rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400"
+          className="mt-4 inline-block rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-accent/20 hover:bg-accent-hover"
         >
           {action.label}
         </Link>

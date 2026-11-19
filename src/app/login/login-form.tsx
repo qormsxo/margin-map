@@ -6,14 +6,17 @@ import { useState } from "react";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { apiFetch } from "@/lib/client-api";
 
-export function LoginForm() {
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
+
+export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgot, setForgot] = useState(false);
 
   async function submit() {
     setBusy(true);
@@ -40,18 +43,18 @@ export function LoginForm() {
       return;
     }
 
-    router.replace("/dashboard");
+    router.replace(mode === "register" ? "/onboarding" : "/dashboard");
     router.refresh();
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
+    <div className="card mx-auto max-w-md space-y-6 p-6 sm:mt-6 sm:p-8">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Account</p>
-        <h1 className="text-3xl font-semibold text-white">
-          {mode === "login" ? "로그인" : "가입"}
+        <p className="eyebrow">{mode === "login" ? "다시 오셨네요" : "3초면 끝나요"}</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">
+          {mode === "login" ? "로그인" : "무료로 시작하기"}
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           로그인하면 휴대폰과 PC 어디서나 같은 매장 데이터를 볼 수 있습니다.
         </p>
       </div>
@@ -68,22 +71,24 @@ export function LoginForm() {
         }}
       >
         <input
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
           placeholder="이메일"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
           placeholder={mode === "register" ? "비밀번호 (8자 이상)" : "비밀번호"}
           type="password"
+          autoComplete={mode === "register" ? "new-password" : "current-password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         {mode === "register" ? (
           <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-line-strong bg-surface px-4 py-3 text-[15px]"
             placeholder="매장명"
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
@@ -92,21 +97,53 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={busy || !email || !password}
-          className="w-full rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+          className="w-full rounded-xl bg-accent px-4 py-3 text-[15px] font-semibold text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
         >
           {mode === "login" ? "로그인" : "가입하고 시작"}
         </button>
       </form>
 
-      <button
-        type="button"
-        className="text-sm text-sky-300"
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-      >
-        {mode === "login" ? "계정이 없나요? 가입" : "이미 계정이 있나요? 로그인"}
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          className="text-sm font-semibold text-brand hover:text-heading"
+          onClick={() => {
+            setMode(mode === "login" ? "register" : "login");
+            setError(null);
+          }}
+        >
+          {mode === "login" ? "계정이 없나요? 가입" : "이미 계정이 있나요? 로그인"}
+        </button>
+        {mode === "login" ? (
+          <button
+            type="button"
+            className="text-sm text-faint hover:text-ink"
+            onClick={() => setForgot((v) => !v)}
+            aria-expanded={forgot}
+          >
+            비밀번호를 잊었나요?
+          </button>
+        ) : null}
+      </div>
 
-      <Link href="/" className="block text-sm text-slate-500">
+      {forgot && mode === "login" ? (
+        <div className="rounded-xl bg-subtle p-4 text-sm text-ink-soft">
+          <p className="font-semibold text-ink">비밀번호 다시 받기</p>
+          <p className="mt-1">
+            가입한 이메일과 매장명을 적어{" "}
+            {SUPPORT_EMAIL ? (
+              <a href={`mailto:${SUPPORT_EMAIL}?subject=MarginMap 비밀번호 재설정`} className="font-semibold text-accent-ink underline">
+                {SUPPORT_EMAIL}
+              </a>
+            ) : (
+              "운영자"
+            )}
+            로 보내 주시면 새 비밀번호를 알려 드립니다. 매장 데이터는 그대로 남아 있습니다.
+          </p>
+        </div>
+      ) : null}
+
+      <Link href="/" className="block text-sm text-faint">
         ← 홈
       </Link>
     </div>

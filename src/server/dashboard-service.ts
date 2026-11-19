@@ -221,6 +221,11 @@ export async function getIntegratedDashboard(input?: {
         highSalesLowContrib: ContributionSalesRow[];
         lowSalesHighContrib: ContributionSalesRow[];
         excludedMenuCount: number;
+        profitAndLoss: Awaited<ReturnType<typeof getContributionAnalysis>> extends infer R
+          ? R extends { status: "COMPLETED"; profitAndLoss: infer P }
+            ? P
+            : never
+          : never;
         evidence: {
           periodStart: string;
           periodEnd: string;
@@ -279,6 +284,7 @@ export async function getIntegratedDashboard(input?: {
         highSalesLowContrib: analysis.highSalesLowContrib,
         lowSalesHighContrib: analysis.lowSalesHighContrib,
         excludedMenuCount: analysis.excludedMenuCount,
+        profitAndLoss: analysis.profitAndLoss,
         evidence: analysis.evidence,
       };
     }

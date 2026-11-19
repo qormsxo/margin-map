@@ -1,10 +1,10 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { EmptyPanel } from "@/components/dashboard/empty-panel";
 import { SetupChecklist, isSetupComplete } from "@/components/dashboard/setup-checklist";
 import { AppError } from "@/lib/errors";
 import { getIntegratedDashboard } from "@/server/dashboard-service";
-import { getSetupStatus } from "@/server/store-service";
+import { getCurrentStore, getSetupStatus } from "@/server/store-service";
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +13,19 @@ export default async function DashboardPage() {
     const status = await getSetupStatus();
     const checklist = isSetupComplete(status) ? null : <SetupChecklist status={status} />;
 
+    // Brand-new store: pick the business type first (creates channels too).
+    if (status.channels === 0 && !(await getCurrentStore()).businessType) {
+      redirect("/onboarding");
+    }
+
     // Profit numbers need at least one sales channel (fees). Until then, only guide setup.
     if (status.channels === 0) {
       return (
         <div className="space-y-6">
           <header className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-white">운영 대시보드</h1>
-            <p className="text-sm text-slate-400">
+            <p className="eyebrow">환영합니다</p>
+            <h1 className="text-[28px] font-bold tracking-tight text-heading">6단계만 채우면 끝</h1>
+            <p className="max-w-lg text-sm leading-relaxed text-muted">
               아래 순서대로 입력하면 메뉴별로 얼마 남는지, 이번 달 실제로 얼마 남았는지가 여기에
               나옵니다.
             </p>
@@ -34,14 +40,6 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
         {checklist}
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link href="/simulation" className="text-sky-300 hover:text-sky-200">
-            가격 시뮬레이션 →
-          </Link>
-          <Link href="/contribution" className="text-sky-300 hover:text-sky-200">
-            실제 이익 보기 →
-          </Link>
-        </div>
         <DashboardView data={data} />
       </div>
     );

@@ -1,3 +1,4 @@
+import { CHANNEL_PRESETS, findBusinessType } from "@/lib/business-types";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { notFound, unauthorized } from "@/lib/errors";
@@ -90,4 +91,59 @@ export async function getSetupStatus() {
     ]);
 
   return { ingredients, menus, channels, menusWithRecipe, salesPeriods, fixedCosts };
+}
+
+/**
+ * First-run setup: remember the business type and create the chosen sales channels
+ * from fee presets, so profit can be computed without a separate channel step.
+ * Safe to run again: existing channels are kept.
+ */
+export async function completeOnboarding(input: { businessType: string; channels: string[] }) {
+  const session = await requireSession();
+  const { validationError } = await import("@/lib/errors");
+
+  if (!findBusinessType(input.businessType)) {
+    throw validationError("업종을 선택하세요.");
+  }
+
+  const presets = CHANNEL_PRESETS.filter((p) => input.channels.includes(p.name));
+
+  if (presets.length === 0) {
+    throw validationError("판매 채널을 하나 이상 고르세요.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.store.update({
+      where: { id: session.storeId },
+      data: { businessType: input.businessType },
+    });
+
+    const existing = await tx.salesChannel.findMany({
+      where: { storeId: session.storeId },
+      select: { name: true, isDefault: true },
+    });
+
+    const existingNames = new Set(existing.map((c) => c.name));
+    let hasDefault = existing.some((c) => c.isDefault);
+
+    for (const preset of presets) {
+      if (existingNames.has(preset.name)) continue;
+
+      await tx.salesChannel.create({
+        data: {
+          storeId: session.storeId,
+          name: preset.name,
+          channelFeeRate: preset.channelFeeRate,
+          paymentFeeRate: preset.paymentFeeRate,
+          deliveryFeeRate: 0,
+          deliveryFeeFixed: preset.deliveryFeeFixed,
+          isDefault: !hasDefault,
+        },
+      });
+
+      hasDefault = true;
+    }
+  });
+
+  return { businessType: input.businessType };
 }

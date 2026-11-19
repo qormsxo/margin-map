@@ -16,6 +16,7 @@ export async function GET() {
       id: store.id,
       name: store.name,
       currency: store.currency,
+      businessType: store.businessType,
     });
   });
 }
@@ -30,6 +31,7 @@ export async function PATCH(request: Request) {
       id: store.id,
       name: store.name,
       currency: store.currency,
+      businessType: store.businessType,
     });
   });
 }

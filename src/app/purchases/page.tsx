@@ -190,9 +190,9 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-400/80">Purchases</p>
-        <h1 className="text-3xl font-semibold text-white">매입으로 보는 실제 원가</h1>
-        <p className="text-sm text-slate-400">
+        <p className="eyebrow uppercase">Purchases</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-heading">매입으로 보는 실제 원가</h1>
+        <p className="text-sm text-muted">
           재고를 셀 필요 없습니다. 한 달 동안 산 재료 영수증 금액을 넣으면, 레시피대로 썼을 때의
           재료비와 비교해서 새는 돈이 있는지 보여 줍니다.
         </p>
@@ -209,10 +209,10 @@ export default function PurchasesPage() {
       ) : null}
 
       {periods.length > 0 ? (
-        <label className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+        <label className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
           판매 기간
           <select
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
             value={periodId}
             onChange={(e) => setPeriodId(e.target.value)}
           >
@@ -234,17 +234,17 @@ export default function PurchasesPage() {
               e.preventDefault();
               void addPurchase();
             }}
-            className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4"
+            className="space-y-3 rounded-xl border border-line bg-surface p-4"
           >
-            <h2 className="text-sm font-medium text-slate-200">매입 추가</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-sm font-medium text-ink">매입 추가</h2>
+            <p className="text-xs text-faint">
               레시피에 들어가는 식재료 매입만 넣으세요. 포장재를 재료로 등록하지 않았다면 포장재
               매입은 빼야 비교가 맞습니다.
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <input
                 type="date"
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                 value={purchasedOn}
                 min={period.periodStart}
                 max={period.periodEnd}
@@ -252,14 +252,14 @@ export default function PurchasesPage() {
               />
               <input
                 ref={amountRef}
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                 placeholder="금액 (예: 268만)"
                 inputMode={inputModes.numeric}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
               <input
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                 placeholder="거래처 (선택)"
                 list="supplier-list"
                 value={supplier}
@@ -281,7 +281,7 @@ export default function PurchasesPage() {
                       setSupplier(s);
                       amountRef.current?.focus();
                     }}
-                    className={`rounded-lg border px-2.5 py-1 text-xs ${supplier === s ? "border-sky-500 text-sky-200" : "border-slate-700 text-slate-400"}`}
+                    className={`rounded-lg border px-2.5 py-1 text-xs ${supplier === s ? "border-accent text-accent" : "border-line-strong text-muted"}`}
                   >
                     {s}
                   </button>
@@ -291,27 +291,27 @@ export default function PurchasesPage() {
             <button
               type="submit"
               disabled={amountValue === null || amountValue < 0}
-              className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 disabled:opacity-40"
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
             >
               추가 (Enter)
             </button>
             {purchases.length > 0 ? (
-              <ul className="divide-y divide-slate-800 text-sm">
-                <li className="flex justify-between py-2 text-slate-400">
+              <ul className="divide-y divide-line text-sm">
+                <li className="flex justify-between py-2 text-muted">
                   <span>이 기간 매입 {purchases.length}건</span>
-                  <span className="font-medium text-white">{won(purchasesTotal)}</span>
+                  <span className="font-medium text-ink">{won(purchasesTotal)}</span>
                 </li>
                 {purchases.map((p) => (
                   <li key={p.id} className="flex items-center justify-between py-2">
-                    <span className="text-slate-300">
+                    <span className="text-ink-soft">
                       {p.purchasedOn} {p.supplier ? `· ${p.supplier}` : ""}
                     </span>
                     <span className="flex items-center gap-2">
-                      <span className="text-slate-100">{won(p.amount)}</span>
+                      <span className="text-ink">{won(p.amount)}</span>
                       <button
                         type="button"
                         onClick={() => void removePurchase(p.id)}
-                        className="rounded px-2 py-1 text-xs text-rose-300 hover:bg-slate-800"
+                        className="rounded px-2 py-1 text-xs text-loss hover:bg-subtle"
                       >
                         삭제
                       </button>
@@ -322,33 +322,33 @@ export default function PurchasesPage() {
             ) : null}
           </form>
 
-          <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+          <section className="space-y-3 rounded-xl border border-line bg-surface p-4">
             <button
               type="button"
               onClick={() => setShowInventory((v) => !v)}
-              className="flex w-full items-center justify-between text-sm text-slate-200"
+              className="flex w-full items-center justify-between text-sm text-ink"
             >
               <span>더 정확하게: 달 초·달 말 남은 재료 금액 (선택)</span>
-              <span className="text-xs text-slate-500">{showInventory ? "접기" : "펼치기"}</span>
+              <span className="text-xs text-faint">{showInventory ? "접기" : "펼치기"}</span>
             </button>
             {showInventory ? (
             <>
-            <p className="text-xs leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-faint">
               이번 달에 산 재료가 다 이번 달에 쓰이는 건 아닙니다. 지난달에 사 둔 걸 이번 달에 쓰기도 하고,
-              이번 달에 산 게 냉장고에 남기도 합니다. 그래서 <b className="text-slate-300">달 초에 남아 있던 재료</b>와
-              <b className="text-slate-300"> 달 말에 남은 재료</b>를 대충이라도 돈으로 치면 실제 쓴 금액이 정확해집니다.
+              이번 달에 산 게 냉장고에 남기도 합니다. 그래서 <b className="text-ink-soft">달 초에 남아 있던 재료</b>와
+              <b className="text-ink-soft"> 달 말에 남은 재료</b>를 대충이라도 돈으로 치면 실제 쓴 금액이 정확해집니다.
               (실제 쓴 금액 = 달 초 재고 + 이번 달 매입 − 달 말 재고) 모르면 비워 두세요.
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <input
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                 placeholder="달 초 남아 있던 재료 (예: 80만)"
                 inputMode={inputModes.numeric}
                 value={opening}
                 onChange={(e) => setOpening(e.target.value)}
               />
               <input
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                 placeholder="달 말 남은 재료 (예: 95만)"
                 inputMode={inputModes.numeric}
                 value={closing}
@@ -364,46 +364,46 @@ export default function PurchasesPage() {
                       : null,
                   )
                 }
-                className="rounded-lg border border-sky-500 px-3 py-2 text-sm text-sky-300 disabled:opacity-40"
+                className="rounded-lg border border-accent px-3 py-2 text-sm text-accent-ink disabled:opacity-40"
               >
                 다시 계산
               </button>
             </div>
             {inventoryHalf ? (
-              <p className="text-xs text-amber-300">달 초·달 말 둘 다 넣어야 반영됩니다.</p>
+              <p className="text-xs text-warn">달 초·달 말 둘 다 넣어야 반영됩니다.</p>
             ) : null}
             </>
             ) : null}
           </section>
 
           {result?.status === "COMPLETED" ? (
-            <section className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-              <h2 className="text-sm font-medium text-slate-200">
+            <section className="space-y-3 rounded-xl border border-line card p-4">
+              <h2 className="text-sm font-medium text-ink">
                 레시피 재료비 vs 실제 매입{" "}
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-faint">
                   ({result.basis === "PURCHASES_ONLY" ? "매입 기준 근사" : "매입 + 재고 증감"})
                 </span>
               </h2>
               <dl className="grid gap-3 text-sm sm:grid-cols-3">
                 <div>
-                  <dt className="text-slate-500">레시피대로 썼을 때 재료비</dt>
-                  <dd className="text-lg text-slate-100">{won(result.theoreticalCost)}</dd>
+                  <dt className="text-faint">레시피대로 썼을 때 재료비</dt>
+                  <dd className="text-lg text-ink">{won(result.theoreticalCost)}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">실제 쓴 재료비 (매입 기준)</dt>
-                  <dd className="text-lg text-slate-100">{won(result.actualCost)}</dd>
+                  <dt className="text-faint">실제 쓴 재료비 (매입 기준)</dt>
+                  <dd className="text-lg text-ink">{won(result.actualCost)}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">차이</dt>
+                  <dt className="text-faint">차이</dt>
                   <dd
-                    className={`text-lg ${result.varianceAmt > 0 ? "text-rose-300" : "text-emerald-300"}`}
+                    className={`text-lg ${result.varianceAmt > 0 ? "text-loss" : "text-gain"}`}
                   >
                     {result.varianceAmt > 0 ? "+" : ""}
                     {won(result.varianceAmt)} ({pct(result.varianceRate)})
                   </dd>
                 </div>
               </dl>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-faint">
                 {result.varianceRate !== null && result.varianceRate < -0.15
                   ? "실제가 레시피 원가보다 훨씬 적습니다. 매입 영수증이 빠졌거나, 지난달에 사 둔 재료를 이번 달에 쓴 경우입니다. 빠진 매입을 넣거나 달 초·달 말 재료 금액을 넣어 보세요."
                   : result.varianceRate !== null && result.varianceRate > 0.05
@@ -426,19 +426,19 @@ export default function PurchasesPage() {
           ) : null}
 
           {result && result.countPriorities.length > 0 ? (
-            <section className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-              <h2 className="text-sm font-medium text-slate-200">이것만 세면 됩니다</h2>
-              <p className="text-xs text-slate-500">
+            <section className="space-y-2 rounded-xl border border-line bg-surface p-4">
+              <h2 className="text-sm font-medium text-ink">이것만 세면 됩니다</h2>
+              <p className="text-xs text-faint">
                 이 기간 이론 원가 비중이 큰 재료입니다. 재료별로 어디서 새는지 보려면 이 몇 개만
                 실사해서 실사용량을 입력하세요.
               </p>
               <ol className="space-y-1 text-sm">
                 {result.countPriorities.map((p, i) => (
                   <li key={p.ingredientId} className="flex justify-between">
-                    <span className="text-slate-200">
+                    <span className="text-ink">
                       {i + 1}. {p.name}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-muted">
                       {won(p.theoAmt)} · {pct(p.share)} (누적 {pct(p.cumulativeShare)})
                     </span>
                   </li>
@@ -449,7 +449,7 @@ export default function PurchasesPage() {
         </>
       ) : null}
 
-      <Link href="/dashboard" className="text-sm text-sky-300">
+      <Link href="/dashboard" className="text-sm text-accent-ink">
         ← 대시보드
       </Link>
     </div>

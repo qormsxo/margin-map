@@ -67,7 +67,7 @@ export function fail(error: AppError | ZodError | DomainError | Error) {
     {
       error: {
         code: "INTERNAL_ERROR",
-        message: "서버 오류가 발생했습니다.",
+        message: "잠깐 문제가 생겼습니다. 입력한 내용은 그대로이니 잠시 후 다시 시도해 주세요.",
         details: [],
       },
     },
@@ -89,7 +89,7 @@ export async function runApi(
     console.error(error);
 
     return fail(
-      new AppError("INTERNAL_ERROR", "서버 오류가 발생했습니다.", 500),
+      new AppError("INTERNAL_ERROR", "잠깐 문제가 생겼습니다. 입력한 내용은 그대로이니 잠시 후 다시 시도해 주세요.", 500),
     );
   }
 }
