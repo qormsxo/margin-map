@@ -73,3 +73,20 @@ $env:DATABASE_URL="<Session pooler 주소>"; node scripts/reset-password.mjs --e
 **데이터 초기화.** `scripts/reset-data.mjs`는 로컬 DB가 아니면 멈춥니다. 운영 DB에는 실행하지 않습니다.
 
 **돈을 받기 시작하면.** Vercel Hobby는 비상업용이라 Pro로 올려야 합니다.
+
+## 검색 노출 (SEO)
+
+이미 들어가 있는 것:
+
+- **제목·설명·키워드 메타 태그:** 문구는 `src/lib/site.ts` 한 곳에서 고칩니다.
+- **링크 미리보기:** 카카오톡·페이스북 등에 공유할 때 보이는 OG 카드와 이미지(`/opengraph-image`)가 있습니다.
+- **`/robots.txt`:** 첫 화면과 로그인만 검색에 허용하고, 로그인 뒤 화면과 API는 막습니다.
+- **`/sitemap.xml`**
+- **파비콘:** `favicon.ico`, `icon.svg`, 아이폰 홈 화면 아이콘(`apple-icon.png`)이 있습니다.
+- **구조화 데이터:** 첫 화면에 JSON-LD(`SoftwareApplication`)가 있습니다.
+
+배포한 뒤에 할 것:
+
+1. **구글:** [Search Console](https://search.google.com/search-console)에서 **URL 접두어** 방식으로 사이트를 추가하고, **HTML 태그**로 소유권을 확인합니다. 받은 `<meta name="google-site-verification" content="...">` 태그에서 `content` 값만 Vercel 환경 변수 `GOOGLE_SITE_VERIFICATION`에 넣습니다. 비밀값이 아니니 종류는 Config로 저장합니다. Redeploy 후 확인 버튼을 누르고, **Sitemaps** 메뉴에 `sitemap.xml`을 제출합니다.
+2. **네이버:** 국내 검색은 네이버 비중이 크니 꼭 합니다. [서치어드바이저](https://searchadvisor.naver.com)에서 사이트를 등록하고, HTML 태그의 `content` 값을 `NAVER_SITE_VERIFICATION`에 넣습니다. Redeploy 후 소유확인을 누르고, **요청 → 사이트맵 제출**에 `https://<주소>/sitemap.xml`을 넣습니다.
+3. **도메인:** 나중에 자기 도메인을 붙이면 `NEXT_PUBLIC_APP_URL`도 그 주소로 바꾸고 Redeploy합니다. 이 값이 canonical 주소, OG 주소, 사이트맵 주소에 쓰입니다. 비워 두면 Vercel 기본 도메인(`*.vercel.app`)이 쓰입니다.

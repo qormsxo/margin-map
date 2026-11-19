@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { themeInitScript } from "@/components/layout/theme-toggle";
+import { site } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,25 +17,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: {
-    default: "MarginMap",
+    default: site.title,
     template: "%s · MarginMap",
   },
-  description: "메뉴별 원가와 공헌이익을 추적하는 음식점 운영 도구",
-  applicationName: "MarginMap",
+  description: site.description,
+  keywords: [...site.keywords],
+  applicationName: site.name,
+  category: "business",
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: "/",
+    siteName: `${site.name} 마진맵`,
+    title: site.title,
+    description: site.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: site.title,
+    description: site.description,
+  },
+  robots: { index: true, follow: true },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NAVER_SITE_VERIFICATION
+      ? { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION }
+      : undefined,
+  },
   appleWebApp: {
     capable: true,
-    title: "MarginMap",
+    title: site.name,
     statusBarStyle: "default",
   },
-  icons: {
-    icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

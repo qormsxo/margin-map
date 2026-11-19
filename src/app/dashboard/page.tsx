@@ -44,7 +44,8 @@ export default async function DashboardPage() {
       </div>
     );
   } catch (error) {
-    if (error instanceof AppError && error.code === "UNAUTHORIZED") {
+    // Signed out, or the session points to a store that no longer exists.
+    if (error instanceof AppError && (error.code === "UNAUTHORIZED" || error.code === "NOT_FOUND")) {
       return (
         <EmptyPanel
           title="대시보드"
