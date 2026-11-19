@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppShell } from "@/components/layout/app-shell";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { themeInitScript } from "@/components/layout/theme-toggle";
 import { site } from "@/lib/site";
@@ -73,10 +72,15 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <RegisterServiceWorker />
-        <AppShell>{children}</AppShell>
+        {children}
       </body>
     </html>
   );

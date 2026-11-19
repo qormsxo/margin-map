@@ -409,6 +409,24 @@ export default function SalesPage() {
         </div>
       ) : null}
 
+      {channels.length > 0 && periods.length === 0 && newMonth ? (
+        <section className="card flex flex-wrap items-center justify-between gap-4 border-accent/30 bg-accent-soft p-5">
+          <div>
+            <p className="font-bold text-accent-ink">아직 판매량을 넣은 달이 없어요</p>
+            <p className="mt-0.5 text-sm text-ink-soft">
+              지난달({Number(newMonth.split("-")[1])}월) 표부터 만들어 드릴게요. 다른 달은 아래에서 고를 수 있습니다.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void createMonth()}
+            className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
+          >
+            {Number(newMonth.split("-")[1])}월 판매량 넣기
+          </button>
+        </section>
+      ) : null}
+
       {channels.length > 0 ? (
         <section className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">

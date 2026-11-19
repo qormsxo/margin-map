@@ -271,18 +271,28 @@ export function DashboardView({ data }: { data: DashboardData }) {
           {sections.contribution.available === true ? (
             <section className="card space-y-4 p-5">
               <SectionTitle title="메뉴 성적표" hint={`${monthLabel(sections.contribution.periodStart)} 판매 기준`} />
-              <Quadrant
-                tone="gain"
-                title="효자 메뉴"
-                hint="적게 팔려도 많이 남음 · 더 밀어 보세요"
-                items={sections.contribution.lowSalesHighContrib}
-              />
-              <Quadrant
-                tone="warn"
-                title="바쁘기만 한 메뉴"
-                hint="많이 팔리지만 덜 남음 · 가격이나 양을 보세요"
-                items={sections.contribution.highSalesLowContrib}
-              />
+              {sections.contribution.lowSalesHighContrib.length === 0 &&
+              sections.contribution.highSalesLowContrib.length === 0 ? (
+                <p className="rounded-xl bg-subtle p-3.5 text-sm leading-relaxed text-muted">
+                  메뉴끼리 판매량·남는 돈 차이가 크지 않아 따로 짚을 메뉴가 없어요. 메뉴가 많을수록 효자 메뉴와 바쁘기만 한
+                  메뉴가 또렷하게 나뉩니다.
+                </p>
+              ) : (
+                <>
+                  <Quadrant
+                    tone="gain"
+                    title="효자 메뉴"
+                    hint="적게 팔려도 많이 남음 · 더 밀어 보세요"
+                    items={sections.contribution.lowSalesHighContrib}
+                  />
+                  <Quadrant
+                    tone="warn"
+                    title="바쁘기만 한 메뉴"
+                    hint="많이 팔리지만 덜 남음 · 가격이나 양을 보세요"
+                    items={sections.contribution.highSalesLowContrib}
+                  />
+                </>
+              )}
             </section>
           ) : (
             <EmptyPanel
