@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/layout/logo";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { LogoutButton } from "@/components/layout/logout-button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -18,21 +19,6 @@ async function currentStoreName(): Promise<string | null> {
   });
 
   return store?.name ?? null;
-}
-
-function Logo({ tone }: { tone: "light" | "dark" }) {
-  return (
-    <span className="flex items-center gap-2">
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-sm font-black text-white">
-        M
-      </span>
-      <span
-        className={`text-[17px] font-bold tracking-tight ${tone === "light" ? "text-white" : "text-heading"}`}
-      >
-        MarginMap
-      </span>
-    </span>
-  );
 }
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
