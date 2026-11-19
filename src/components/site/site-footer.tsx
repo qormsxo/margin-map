@@ -46,7 +46,15 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <p className="pb-8 text-center text-xs text-faint">© {new Date().getFullYear()} {site.name}</p>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pb-8 text-xs text-faint">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+        <Link href="/terms" className="hover:text-ink">
+          이용약관
+        </Link>
+        <Link href="/privacy" className="font-semibold hover:text-ink">
+          개인정보처리방침
+        </Link>
+      </div>
     </footer>
   );
 }

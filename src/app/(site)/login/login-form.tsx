@@ -17,6 +17,7 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [forgot, setForgot] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   async function submit() {
     setBusy(true);
@@ -28,7 +29,7 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
     const body =
       mode === "login"
         ? { email, password }
-        : { email, password, storeName: storeName || "내 매장" };
+        : { email, password, storeName: storeName || "내 매장", agreedToTerms: agreed };
 
     const result = await apiFetch(path, {
       method: "POST",
@@ -67,7 +68,9 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
         onSubmit={(e) => {
           e.preventDefault();
 
-          if (!busy && email && password) void submit();
+          if (busy || !email || !password || (mode === "register" && !agreed)) return;
+
+          void submit();
         }}
       >
         <input
@@ -94,9 +97,29 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
             onChange={(e) => setStoreName(e.target.value)}
           />
         ) : null}
+        {mode === "register" ? (
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-xl bg-subtle px-4 py-3 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+            />
+            <span>
+              <Link href="/terms" target="_blank" className="font-semibold text-accent-ink underline">
+                이용약관
+              </Link>
+              과{" "}
+              <Link href="/privacy" target="_blank" className="font-semibold text-accent-ink underline">
+                개인정보처리방침
+              </Link>
+              에 동의합니다 (필수)
+            </span>
+          </label>
+        ) : null}
         <button
           type="submit"
-          disabled={busy || !email || !password}
+          disabled={busy || !email || !password || (mode === "register" && !agreed)}
           className="w-full rounded-xl bg-accent px-4 py-3 text-[15px] font-semibold text-white shadow-sm shadow-accent/20 hover:bg-accent-hover disabled:opacity-40"
         >
           {mode === "login" ? "로그인" : "가입하고 시작"}

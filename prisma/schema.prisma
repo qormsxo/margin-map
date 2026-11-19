@@ -12,6 +12,9 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  /// Which terms/privacy version the user agreed to at signup, and when.
+  termsVersion    String?
+  termsAcceptedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -604,4 +607,14 @@ model PurchaseRecord {
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@index([storeId, purchasedOn])
+}
+
+/// Failed-login and signup counters for brute-force protection.
+/// key: "login:email:<email>", "login:ip:<ip>", "register:ip:<ip>".
+model AuthThrottle {
+  key         String    @id
+  failures    Int       @default(0)
+  windowStart DateTime  @default(now())
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
 }

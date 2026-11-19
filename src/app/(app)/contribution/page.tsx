@@ -204,6 +204,7 @@ type ProfitAndLoss = Awaited<
   : never;
 
 const QUADRANT_LABEL = {
+  BALANCED: "—",
   HIGH_SALES_LOW_CONTRIB: "많이 팔리지만 덜 남음",
   LOW_SALES_HIGH_CONTRIB: "적게 팔리지만 많이 남음",
   HIGH_SALES_HIGH_CONTRIB: "효자 메뉴",
