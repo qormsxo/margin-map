@@ -6,6 +6,7 @@ export type ApiErrorCode =
   | "CONFLICT"
   | "DATA_INSUFFICIENT"
   | "NOT_IMPLEMENTED_MVP"
+  | "TOO_MANY_REQUESTS"
   | "INTERNAL_ERROR";
 
 export class AppError extends Error {
@@ -56,4 +57,8 @@ export function dataInsufficient(message: string) {
 
 export function notImplementedMvp(message: string) {
   return new AppError("NOT_IMPLEMENTED_MVP", message, 403);
+}
+
+export function tooManyRequests(message: string) {
+  return new AppError("TOO_MANY_REQUESTS", message, 429);
 }
