@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getActiveSession } from "@/server/store-service";
 import { OnboardingForm } from "./onboarding-form";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "시작하기" };
 
 export default async function OnboardingPage() {
-  if (!(await getSession())) redirect("/login?mode=register");
+  if (!(await getActiveSession())) redirect("/login?mode=register");
 
   return <OnboardingForm />;
 }

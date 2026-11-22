@@ -27,7 +27,10 @@ const groups: { title: string; items: NavItem[] }[] = [
   },
   {
     title: "도구",
-    items: [{ href: "/simulation", label: "가격 시뮬레이션", icon: "sliders" }],
+    items: [
+      { href: "/simulation", label: "가격 시뮬레이션", icon: "sliders" },
+      { href: "/account", label: "계정", icon: "user" },
+    ],
   },
 ];
 
@@ -129,6 +132,7 @@ export function MobileMoreLinks() {
     { href: "/purchases", label: "매입", icon: "truck" },
     { href: "/alerts", label: "알림", icon: "bell" },
     { href: "/simulation", label: "시뮬", icon: "sliders" },
+    { href: "/account", label: "계정", icon: "user" },
   ];
 
   return (

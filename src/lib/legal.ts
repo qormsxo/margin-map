@@ -6,10 +6,10 @@
  *   NEXT_PUBLIC_OPERATOR_NAME     e.g. "홍길동" or "마진맵(사업자명)"
  *   NEXT_PUBLIC_SUPPORT_EMAIL     contact for privacy requests and support
  */
-export const TERMS_VERSION = "2026-11-19";
+export const TERMS_VERSION = "2026-11-22";
 
 export const legal = {
-  effectiveDate: "2026년 11월 19일",
+  effectiveDate: "2026년 11월 22일",
   serviceName: "MarginMap(마진맵)",
   operator: process.env.NEXT_PUBLIC_OPERATOR_NAME || "MarginMap 운영자",
   email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "",

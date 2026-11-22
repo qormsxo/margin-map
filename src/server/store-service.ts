@@ -3,8 +3,30 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { notFound, unauthorized } from "@/lib/errors";
 
-export async function requireSession() {
+/**
+ * The signed session, but only while its account, membership and store still exist.
+ * The cookie is stateless, so this is what makes a deleted account's leftover cookie stop
+ * working immediately (and keeps /login from bouncing such a browser to /dashboard).
+ */
+export async function getActiveSession() {
   const session = await getSession();
+
+  if (!session) return null;
+
+  const membership = await prisma.organizationMember.findFirst({
+    where: {
+      userId: session.userId,
+      organizationId: session.organizationId,
+      organization: { stores: { some: { id: session.storeId } } },
+    },
+    select: { id: true },
+  });
+
+  return membership ? session : null;
+}
+
+export async function requireSession() {
+  const session = await getActiveSession();
 
   if (!session) {
     throw unauthorized();
