@@ -27,6 +27,7 @@ type Period = {
   grain: string;
   lines: Array<{ menuItemId: string; salesChannelId: string | null; qty: number }>;
   orderCounts: Array<{ salesChannelId: string; orderCount: number }>;
+  adCosts: Array<{ salesChannelId: string; adSpend: number; adRate: number }>;
 };
 
 const PRESETS = CHANNEL_PRESETS;
@@ -66,6 +67,8 @@ export default function SalesPage() {
   const [periodId, setPeriodId] = useState("");
   const [cells, setCells] = useState<Record<string, string>>({});
   const [orders, setOrders] = useState<Record<string, string>>({});
+  const [adSpend, setAdSpend] = useState<Record<string, string>>({});
+  const [adRate, setAdRate] = useState<Record<string, string>>({});
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -128,10 +131,14 @@ export default function SalesPage() {
 
     setCells(nextCells);
     setOrders(nextOrders);
+    setAdSpend(Object.fromEntries(period.adCosts.filter((c) => c.adSpend > 0).map((c) => [c.salesChannelId, c.adSpend.toLocaleString("ko-KR")])));
+    setAdRate(Object.fromEntries(period.adCosts.filter((c) => c.adRate > 0).map((c) => [c.salesChannelId, String(Math.round(c.adRate * 10000) / 100)])));
     setDirty(false);
   }, [period]);
 
   const deliveryChannels = channels.filter((c) => c.deliveryFeeFixed > 0);
+  // Delivery apps charge a platform fee; those are the channels that run paid ads.
+  const adChannels = channels.filter((c) => c.channelFeeRate > 0 || c.deliveryFeeFixed > 0);
 
   const totals = useMemo(() => {
     const byMenu: Record<string, number> = {};
@@ -173,6 +180,8 @@ export default function SalesPage() {
 
     setCells(nextCells);
     setOrders(nextOrders);
+    setAdSpend(Object.fromEntries(previousPeriod.adCosts.filter((c) => c.adSpend > 0).map((c) => [c.salesChannelId, c.adSpend.toLocaleString("ko-KR")])));
+    setAdRate(Object.fromEntries(previousPeriod.adCosts.filter((c) => c.adRate > 0).map((c) => [c.salesChannelId, String(Math.round(c.adRate * 10000) / 100)])));
     setDirty(true);
     setInfo(`${periodLabel(previousPeriod)} 숫자를 가져왔습니다. 바뀐 것만 고치고 저장하세요.`);
   }
@@ -277,6 +286,12 @@ export default function SalesPage() {
       orderCount: Math.round(toNumber(orders[channel.id] ?? "")),
     }));
 
+    const costs = adChannels.map((channel) => ({
+      salesChannelId: channel.id,
+      adSpend: parseAmount(adSpend[channel.id] ?? "") ?? 0,
+      adRate: Math.min(1, Math.max(0, (parseAmount(adRate[channel.id] ?? "") ?? 0) / 100)),
+    }));
+
     const linesRes = await apiFetch<Period>(`/api/v1/sales-periods/${period.id}/lines`, {
       method: "PUT",
       body: JSON.stringify({ lines, source: "MANUAL" }),
@@ -294,15 +309,27 @@ export default function SalesPage() {
       body: JSON.stringify({ counts }),
     });
 
-    setBusy(false);
-
     if (!countsRes.ok) {
+      setBusy(false);
       setError(countsRes.message);
 
       return;
     }
 
-    setPeriods((list) => list.map((p) => (p.id === countsRes.data.id ? countsRes.data : p)));
+    const adRes = await apiFetch<Period>(`/api/v1/sales-periods/${period.id}/ad-costs`, {
+      method: "PUT",
+      body: JSON.stringify({ costs }),
+    });
+
+    setBusy(false);
+
+    if (!adRes.ok) {
+      setError(adRes.message);
+
+      return;
+    }
+
+    setPeriods((list) => list.map((p) => (p.id === adRes.data.id ? adRes.data : p)));
     setDirty(false);
     setInfo("저장했습니다.");
   }
@@ -565,6 +592,56 @@ export default function SalesPage() {
                     <td />
                   </tr>
                 ) : null}
+                {adChannels.length > 0 ? (
+                  <>
+                    <tr className="border-t border-line">
+                      <td className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-surface px-3 py-2 text-warn">
+                        광고비 (원/월)
+                      </td>
+                      {channels.map((c) => (
+                        <td key={c.id} className="px-2 py-1.5">
+                          {adChannels.includes(c) ? (
+                            <input
+                              aria-label={`${c.name} 이번 달 광고비`}
+                              className={input}
+                              inputMode={inputModes.numeric}
+                              placeholder="예: 8.8만"
+                              value={adSpend[c.id] ?? ""}
+                              onChange={(e) => {
+                                setAdSpend((prev) => ({ ...prev, [c.id]: e.target.value }));
+                                setDirty(true);
+                              }}
+                            />
+                          ) : null}
+                        </td>
+                      ))}
+                      <td />
+                    </tr>
+                    <tr className="border-t border-line">
+                      <td className="sticky left-0 z-10 min-w-24 whitespace-nowrap bg-surface px-3 py-2 text-warn">
+                        광고 %
+                      </td>
+                      {channels.map((c) => (
+                        <td key={c.id} className="px-2 py-1.5">
+                          {adChannels.includes(c) ? (
+                            <input
+                              aria-label={`${c.name} 매출 대비 광고 수수료율`}
+                              className={input}
+                              inputMode={inputModes.decimal}
+                              placeholder="%"
+                              value={adRate[c.id] ?? ""}
+                              onChange={(e) => {
+                                setAdRate((prev) => ({ ...prev, [c.id]: e.target.value }));
+                                setDirty(true);
+                              }}
+                            />
+                          ) : null}
+                        </td>
+                      ))}
+                      <td />
+                    </tr>
+                  </>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -573,6 +650,13 @@ export default function SalesPage() {
             <p className="text-xs text-faint">
               배달비는 메뉴 개수가 아니라 주문 1건마다 나갑니다. 배달앱 정산 화면의 주문 건수를 넣으면
               정확해지고, 비워 두면 메뉴 1개마다 배달비를 빼서 실제보다 덜 남는 것으로 계산됩니다.
+            </p>
+          ) : null}
+
+          {adChannels.length > 0 ? (
+            <p className="text-xs text-faint">
+              광고비는 정산서의 광고 금액을 넣으세요. 깃발·클릭 광고처럼 한 달에 쓴 돈은 ‘광고비’에, 매출의 몇 %를
+              떼는 광고는 ‘광고 %’에 넣습니다. 그 채널에서 팔린 메뉴의 매출 비중대로 나눠서 뺍니다.
             </p>
           ) : null}
 

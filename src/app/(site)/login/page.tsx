@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getActiveSession } from "@/server/store-service";
 import { LoginForm } from "./login-form";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function LoginPage({
   const { mode } = await searchParams;
 
   // Already signed in: there is nothing to do here.
-  if (await getSession()) redirect("/dashboard");
+  if (await getActiveSession()) redirect("/dashboard");
 
   return <LoginForm initialMode={mode === "register" ? "register" : "login"} />;
 }

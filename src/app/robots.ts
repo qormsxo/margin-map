@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
         "/purchases",
         "/alerts",
         "/simulation",
+        "/account",
         "/health",
         "/offline",
       ],

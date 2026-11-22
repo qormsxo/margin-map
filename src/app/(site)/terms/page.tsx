@@ -77,7 +77,8 @@ export default function TermsPage() {
 
         <H2 id="withdraw">제9조 (탈퇴)</H2>
         <P>
-          이용자는 언제든지 가입한 이메일로{" "}
+          이용자는 언제든지 서비스의 계정 화면에서 바로 탈퇴할 수 있으며, 탈퇴하면 계정과 입력한 정보가 즉시 삭제됩니다.
+          로그인할 수 없는 경우에는 가입한 이메일로{" "}
           {legal.email ? (
             <a href={`mailto:${legal.email}`} className="font-semibold text-accent-ink underline">
               {legal.email}
@@ -85,7 +86,7 @@ export default function TermsPage() {
           ) : (
             "운영자"
           )}
-          에 탈퇴를 요청할 수 있으며, 운영자는 지체 없이 계정과 입력 정보를 삭제합니다.
+          에 탈퇴를 요청할 수 있으며, 운영자는 지체 없이 처리합니다.
         </P>
 
         <H2 id="law">제10조 (준거법과 분쟁)</H2>

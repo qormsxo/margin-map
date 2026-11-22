@@ -1,6 +1,7 @@
 import {
   METRIC_TYPE_CONTRIBUTION,
   allocateByRevenue,
+  channelAdCost,
   analyzeContributionBySales,
   orderDeliveryCost,
   calculateMenuProfitability,
@@ -25,7 +26,7 @@ export async function getContributionAnalysis(input: {
 
   const period = await prisma.salesPeriod.findFirst({
     where: { id: input.periodId, storeId: session.storeId },
-    include: { lines: true, orderCounts: true },
+    include: { lines: true, orderCounts: true, adCosts: true },
   });
 
   if (!period) throw notFound("판매 기간을 찾을 수 없습니다.");
@@ -97,6 +98,9 @@ export async function getContributionAnalysis(input: {
 
   const menuRevenueByChannel = new Map<string, Map<string, number>>();
 
+  // Every channel (not only per-order ones): used to split that channel's ad cost.
+  const menuRevenueAllChannels = new Map<string, Map<string, number>>();
+
   // Each sales line is valued with its own channel's fees and price, then
   // summed per menu and per channel (홀·배민·쿠팡이츠 합산).
   const perMenu = new Map<string, { qty: number; contribution: number }>();
@@ -134,6 +138,11 @@ export async function getContributionAnalysis(input: {
       });
 
       revenue += sellingPrice * qty;
+
+      const allByMenu = menuRevenueAllChannels.get(lineChannelId) ?? new Map<string, number>();
+
+      allByMenu.set(menu.id, (allByMenu.get(menu.id) ?? 0) + sellingPrice * qty);
+      menuRevenueAllChannels.set(lineChannelId, allByMenu);
 
       if (perOrder) {
         const byMenu = menuRevenueByChannel.get(lineChannelId) ?? new Map<string, number>();
@@ -188,6 +197,48 @@ export async function getContributionAnalysis(input: {
     if (channelAgg) channelAgg.contribution -= cost;
   }
 
+  // Subtract delivery-app ad cost (monthly spend + % of that channel's sales),
+  // split across that channel's menus by revenue share, like the delivery fee.
+  const adCostByChannel = new Map<string, number>();
+
+  const adInputByChannel = new Map(
+    period.adCosts.map((c) => [c.salesChannelId, { adSpend: n(c.adSpend), adRate: n(c.adRate) }] as const),
+  );
+
+  for (const [lineChannelId, ad] of adInputByChannel) {
+    const byMenu = menuRevenueAllChannels.get(lineChannelId) ?? new Map<string, number>();
+    const channelRevenue = [...byMenu.values()].reduce((sum, v) => sum + v, 0);
+
+    let cost: number;
+
+    try {
+      cost = channelAdCost({ adSpend: ad.adSpend, adRate: ad.adRate, channelRevenue });
+    } catch (error) {
+      if (isMappableError(error)) throw toAppError(error);
+      throw error;
+    }
+
+    if (cost === 0) continue;
+
+    adCostByChannel.set(lineChannelId, cost);
+
+    for (const [menuId, share] of allocateByRevenue(cost, byMenu)) {
+      const menuAgg = perMenu.get(menuId);
+
+      if (menuAgg) menuAgg.contribution -= share;
+    }
+
+    // Spend on a channel with no sales this period still costs money: book it on that channel.
+    const channelAgg = perChannel.get(lineChannelId) ?? { qty: 0, revenue: 0, contribution: 0 };
+
+    channelAgg.contribution -= cost;
+    perChannel.set(lineChannelId, channelAgg);
+  }
+
+  const unallocatedAdCost = [...adCostByChannel.entries()]
+    .filter(([id]) => !menuRevenueAllChannels.has(id))
+    .reduce((sum, [, cost]) => sum + cost, 0);
+
   const rows = [...perMenu.entries()].map(([menuItemId, agg]) => ({
     menuItemId,
     name: menuById.get(menuItemId)?.name ?? menuItemId,
@@ -206,6 +257,9 @@ export async function getContributionAnalysis(input: {
     /** PER_ORDER: 주문 수 × 배달비. PER_ITEM: 주문 수가 없어 메뉴 1개마다 뺌. */
     deliveryBasis: orderCountByChannel.has(id) ? ("PER_ORDER" as const) : ("PER_ITEM" as const),
     deliveryCost: Math.round(deliveryCostByChannel.get(id) ?? 0),
+    adCost: Math.round(adCostByChannel.get(id) ?? 0),
+    adSpend: adInputByChannel.get(id)?.adSpend ?? 0,
+    adRate: adInputByChannel.get(id)?.adRate ?? 0,
     hasDeliveryFee: n(channelById.get(id)?.deliveryFeeFixed ?? 0) > 0,
     contributionMargin:
       agg.revenue > 0 ? Math.round((agg.contribution / agg.revenue) * 10000) / 10000 : null,
@@ -250,10 +304,9 @@ export async function getContributionAnalysis(input: {
     };
   }
 
-  const totalContribution = analyzed.menus.reduce(
-    (sum, m) => sum + m.totalContribution,
-    0,
-  );
+  // Ad spend on a channel that sold nothing this period has no menu to land on; still count it.
+  const totalContribution =
+    analyzed.menus.reduce((sum, m) => sum + m.totalContribution, 0) - unallocatedAdCost;
 
   // Only menus with sales and a recipe count toward revenue/contribution.
   const profitAndLoss = await buildProfitAndLoss({
@@ -269,6 +322,7 @@ export async function getContributionAnalysis(input: {
     periodId: period.id,
     profitAndLoss,
     byChannel,
+    adCostTotal: Math.round([...adCostByChannel.values()].reduce((sum, v) => sum + v, 0)),
     metricType: METRIC_TYPE_CONTRIBUTION,
     costAsOf: "CURRENT_MASTER" as const,
     costBasisSnapshotId: null,

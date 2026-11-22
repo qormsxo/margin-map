@@ -18,6 +18,7 @@ function serializePeriod(row: {
     source: FactSource;
   }>;
   orderCounts: Array<{ salesChannelId: string; orderCount: number }>;
+  adCosts: Array<{ salesChannelId: string; adSpend: Prisma.Decimal; adRate: Prisma.Decimal }>;
 }) {
   return {
     id: row.id,
@@ -35,6 +36,11 @@ function serializePeriod(row: {
       salesChannelId: c.salesChannelId,
       orderCount: c.orderCount,
     })),
+    adCosts: row.adCosts.map((c) => ({
+      salesChannelId: c.salesChannelId,
+      adSpend: n(c.adSpend),
+      adRate: n(c.adRate),
+    })),
   };
 }
 
@@ -43,7 +49,7 @@ export async function listSalesPeriods() {
 
   const rows = await prisma.salesPeriod.findMany({
     where: { storeId: session.storeId },
-    include: { lines: true, orderCounts: true },
+    include: { lines: true, orderCounts: true, adCosts: true },
     orderBy: { periodStart: "desc" },
   });
 
@@ -55,7 +61,7 @@ export async function getSalesPeriod(id: string) {
 
   const row = await prisma.salesPeriod.findFirst({
     where: { id, storeId: session.storeId },
-    include: { lines: true, orderCounts: true },
+    include: { lines: true, orderCounts: true, adCosts: true },
   });
 
   if (!row) throw notFound("판매 기간을 찾을 수 없습니다.");
@@ -84,7 +90,7 @@ export async function createSalesPeriod(input: {
         periodEnd,
         grain: input.grain,
       },
-      include: { lines: true, orderCounts: true },
+      include: { lines: true, orderCounts: true, adCosts: true },
     });
 
     return serializePeriod(row);
@@ -192,6 +198,50 @@ export async function replaceOrderCounts(
         salesChannelId: c.salesChannelId,
         orderCount: c.orderCount,
         source: "MANUAL" as const,
+      })),
+    });
+  });
+
+  return getSalesPeriod(periodId);
+}
+
+/** Replace per-channel delivery-app ad costs for a period (monthly spend and/or % of sales). */
+export async function replaceAdCosts(
+  periodId: string,
+  input: { costs: Array<{ salesChannelId: string; adSpend: number; adRate: number }> },
+) {
+  const session = await requireSession();
+
+  const period = await prisma.salesPeriod.findFirst({
+    where: { id: periodId, storeId: session.storeId },
+  });
+
+  if (!period) throw notFound("판매 기간을 찾을 수 없습니다.");
+
+  const channelIds = [...new Set(input.costs.map((c) => c.salesChannelId))];
+
+  const channels = await prisma.salesChannel.findMany({
+    where: { storeId: session.storeId, id: { in: channelIds } },
+    select: { id: true },
+  });
+
+  if (channels.length !== channelIds.length) {
+    throw validationError("존재하지 않는 판매 채널이 포함되어 있습니다.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.salesAdCost.deleteMany({ where: { periodId } });
+
+    const rows = input.costs.filter((c) => c.adSpend > 0 || c.adRate > 0);
+
+    if (rows.length === 0) return;
+
+    await tx.salesAdCost.createMany({
+      data: rows.map((c) => ({
+        periodId,
+        salesChannelId: c.salesChannelId,
+        adSpend: d(c.adSpend),
+        adRate: d(c.adRate),
       })),
     });
   });
