@@ -82,6 +82,12 @@ export default async function ContributionPage({
 
         <ProfitAndLossCard pl={analysis.profitAndLoss} />
 
+        {analysis.adCostTotal > 0 ? (
+          <p className="text-xs text-muted">
+            배달앱 광고비 {won(analysis.adCostTotal)}을 뺀 금액입니다. 채널별 광고 효율은 아래 표에서 볼 수 있습니다.
+          </p>
+        ) : null}
+
         {analysis.byChannel.length > 1 ? (
           <section className="overflow-auto rounded-xl border border-line">
             <table className="min-w-full text-left text-sm">
@@ -91,6 +97,7 @@ export default async function ContributionPage({
                   <th className="px-3 py-2">판매량</th>
                   <th className="px-3 py-2">매출</th>
                   <th className="px-3 py-2">배달비</th>
+                  <th className="px-3 py-2">광고비</th>
                   <th className="px-3 py-2">남는 돈</th>
                   <th className="px-3 py-2">마진율</th>
                 </tr>
@@ -107,6 +114,18 @@ export default async function ContributionPage({
                         : c.deliveryBasis === "PER_ORDER"
                           ? `${won(c.deliveryCost)} (${(c.orderCount ?? 0).toLocaleString("ko-KR")}건)`
                           : "주문 건수 미입력 · 메뉴마다 뺌"}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-muted">
+                      {c.adCost > 0 ? (
+                        <>
+                          <span className="text-ink">{won(c.adCost)}</span>
+                          {c.revenue > 0 ? (
+                            <span className="block">광고비 1만 원당 매출 {won(Math.round((c.revenue / c.adCost) * 10_000))}</span>
+                          ) : null}
+                        </>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-3 py-2">{won(c.contribution)}</td>
                     <td className="px-3 py-2">{pct(c.contributionMargin)}</td>

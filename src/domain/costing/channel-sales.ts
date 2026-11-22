@@ -1,4 +1,17 @@
-import { assertNonNegative } from "./money";
+import { assertNonNegative, assertRate } from "./money";
+
+/**
+ * Delivery-app advertising for one channel in one period.
+ * Fixed spend (flag/click ads used this month) is charged even with no sales;
+ * the rate part (ads billed as a share of sales) scales with that channel's revenue.
+ */
+export function channelAdCost(input: { adSpend: number; adRate: number; channelRevenue: number }): number {
+  assertNonNegative(input.adSpend, "adSpend");
+  assertRate(input.adRate, "adRate");
+  assertNonNegative(input.channelRevenue, "channelRevenue");
+
+  return input.adSpend + input.adRate * input.channelRevenue;
+}
 
 /**
  * Per-order delivery fee for a channel and period.

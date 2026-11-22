@@ -260,6 +260,7 @@ model SalesChannel {
   defaultForMenus  MenuItem[]         @relation("MenuDefaultChannel")
   salesLines       SalesLine[]
   orderCounts      SalesOrderCount[]
+  adCosts          SalesAdCost[]
 
   @@unique([storeId, name])
   @@index([storeId])
@@ -302,6 +303,7 @@ model SalesPeriod {
   store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   lines       SalesLine[]
   orderCounts SalesOrderCount[]
+  adCosts     SalesAdCost[]
 
   @@unique([storeId, periodStart, periodEnd])
   @@index([storeId])
@@ -333,6 +335,21 @@ model SalesOrderCount {
   orderCount     Int
   source         FactSource @default(MANUAL)
   createdAt      DateTime   @default(now())
+
+  period       SalesPeriod  @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, salesChannelId])
+}
+
+/// 기간·채널별 배달앱 광고비. 월 고정액(깃발·클릭 광고 사용액)과 매출 대비 광고율(%) 중 하나 또는 둘 다.
+model SalesAdCost {
+  id             String   @id @default(cuid())
+  periodId       String
+  salesChannelId String
+  adSpend        Decimal  @default(0) @db.Decimal(18, 2)
+  adRate         Decimal  @default(0) @db.Decimal(8, 6)
+  createdAt      DateTime @default(now())
 
   period       SalesPeriod  @relation(fields: [periodId], references: [id], onDelete: Cascade)
   salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
