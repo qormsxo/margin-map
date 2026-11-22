@@ -51,3 +51,6 @@ skills-lock.json
 
 # DB backups (scripts/backup.mjs)
 /backups
+
+# internal planning docs (local only)
+/docs
