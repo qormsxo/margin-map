@@ -11,15 +11,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/login" },
 };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ mode?: string }>;
-}) {
-  const { mode } = await searchParams;
-
+export default async function LoginPage() {
   // Already signed in: there is nothing to do here.
   if (await getActiveSession()) redirect("/dashboard");
 
-  return <LoginForm initialMode={mode === "register" ? "register" : "login"} />;
+  return <LoginForm />;
 }
