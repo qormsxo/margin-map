@@ -200,7 +200,7 @@ export default function HomePage() {
           </Link>
         </div>
         <ul className="mt-6 grid gap-4 sm:grid-cols-3">
-          {GUIDES.map((g) => (
+          {GUIDES.slice(0, 6).map((g) => (
             <li key={g.slug}>
               <article className="card h-full p-6 hover:shadow-lift">
                 <h3 className="font-bold text-heading">
