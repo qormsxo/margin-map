@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { runApi, ok } from "@/lib/api";
 import { deleteAccount } from "@/server/account-service";
+import { clientIp } from "@/server/auth-throttle";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,6 @@ export async function POST(request: Request) {
   return runApi(async () => {
     const body = bodySchema.parse(await request.json());
 
-    return ok(await deleteAccount(body));
+    return ok(await deleteAccount(body, clientIp(request)));
   });
 }

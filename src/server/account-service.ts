@@ -1,36 +1,40 @@
 import bcrypt from "bcryptjs";
-import { THROTTLE_POLICIES } from "@/domain/auth/throttle";
 import { clearSessionCookie } from "@/lib/auth/session";
-import { tooManyRequests, unauthorized, validationError } from "@/lib/errors";
+import { unauthorized, validationError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
-import { assertNotLocked, clearThrottle, lockedMessage, recordFailures } from "@/server/auth-throttle";
+import {
+  admitAttempts,
+  clearThrottle,
+  lockedByThisAttempt,
+  loginKeys,
+  refundAttempts,
+} from "@/server/auth-throttle";
 import { requireSession } from "@/server/store-service";
 
 /**
  * Delete the signed-in owner's account and every record of their store.
  *
  * Confirmation: the current password (so a borrowed, unlocked phone is not enough) and the
- * store name typed out (so it is never a misclick). Wrong passwords count toward the same
- * per-email lock as login, so this cannot be used to guess passwords.
+ * store name typed out (so it is never a misclick). Password checks count toward the same
+ * locks as login, so this cannot be used to guess passwords.
  */
-export async function deleteAccount(input: { password: string; storeName: string }) {
+export async function deleteAccount(input: { password: string; storeName: string }, ip = "unknown") {
   const session = await requireSession();
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } });
 
   if (!user) throw unauthorized();
 
-  const emailKey = { key: `login:email:${user.email}`, policy: THROTTLE_POLICIES.loginEmail };
-
-  await assertNotLocked([emailKey], "비밀번호 확인");
+  const keys = loginKeys(user.email, ip);
+  const lockIfWrongMs = await admitAttempts(keys.all, "비밀번호 확인");
 
   if (!(await bcrypt.compare(input.password, user.passwordHash))) {
-    const lockedMs = await recordFailures([emailKey]);
-
-    if (lockedMs > 0) throw tooManyRequests(lockedMessage(lockedMs, "비밀번호 확인"));
+    if (lockIfWrongMs > 0) throw lockedByThisAttempt(lockIfWrongMs, "비밀번호 확인");
 
     throw unauthorized("비밀번호가 올바르지 않습니다.");
   }
+
+  await refundAttempts([keys.ip]);
 
   const store = await prisma.store.findFirst({
     where: { id: session.storeId, organizationId: session.organizationId },
@@ -80,7 +84,7 @@ export async function deleteAccount(input: { password: string; storeName: string
     }
   });
 
-  await clearThrottle(emailKey.key);
+  await clearThrottle([keys.emailIp.key, keys.email.key]);
   await clearSessionCookie();
 
   return { deleted: true };

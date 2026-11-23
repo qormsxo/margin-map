@@ -1,10 +1,16 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { conflict, tooManyRequests, unauthorized, validationError } from "@/lib/errors";
+import { conflict, unauthorized, validationError } from "@/lib/errors";
 import { setSessionCookie, clearSessionCookie } from "@/lib/auth/session";
 import { THROTTLE_POLICIES } from "@/domain/auth/throttle";
 import { TERMS_VERSION } from "@/lib/legal";
-import { assertNotLocked, clearThrottle, lockedMessage, recordFailures } from "@/server/auth-throttle";
+import {
+  admitAttempts,
+  clearThrottle,
+  lockedByThisAttempt,
+  loginKeys,
+  refundAttempts,
+} from "@/server/auth-throttle";
 
 // Compared against when the email is unknown, so "no such user" takes as long as "wrong password".
 const DUMMY_HASH = "$2b$10$9TmDsCVpuqxeW/YQsB621e6ZfqeRIfoety4gzWnIYbhqtzuoxgPVm";
@@ -25,10 +31,6 @@ export async function registerUser(
     throw validationError("이용약관과 개인정보처리방침에 동의해야 가입할 수 있습니다.");
   }
 
-  const registerKey = { key: `register:ip:${ip}`, policy: THROTTLE_POLICIES.registerIp };
-
-  await assertNotLocked([registerKey], "가입");
-
   if (!email || input.password.length < 8) {
     throw validationError("이메일과 8자 이상 비밀번호가 필요합니다.");
   }
@@ -36,6 +38,9 @@ export async function registerUser(
   if (!input.storeName.trim()) {
     throw validationError("매장명이 필요합니다.");
   }
+
+  // Counted before the lookup, so probing which emails exist (409) uses up the same quota.
+  await admitAttempts([{ key: `register:ip:${ip}`, policy: THROTTLE_POLICIES.registerIp }], "가입");
 
   const existing = await prisma.user.findUnique({ where: { email } });
 
@@ -74,8 +79,6 @@ export async function registerUser(
     return { user, organization, store };
   });
 
-  await recordFailures([registerKey]);
-
   await setSessionCookie({
     userId: result.user.id,
     storeId: result.store.id,
@@ -96,25 +99,20 @@ export async function registerUser(
 export async function loginUser(input: { email: string; password: string }, ip = "unknown") {
   const email = input.email.trim().toLowerCase();
 
-  const keys = [
-    { key: `login:email:${email}`, policy: THROTTLE_POLICIES.loginEmail },
-    { key: `login:ip:${ip}`, policy: THROTTLE_POLICIES.loginIp },
-  ];
-
-  await assertNotLocked(keys, "로그인");
+  const keys = loginKeys(email, ip);
+  const lockIfWrongMs = await admitAttempts(keys.all, "로그인");
 
   const user = await prisma.user.findUnique({ where: { email } });
   const valid = await bcrypt.compare(input.password, user?.passwordHash ?? DUMMY_HASH);
 
   if (!user || !valid) {
-    const lockedMs = await recordFailures(keys);
-
-    if (lockedMs > 0) throw tooManyRequests(lockedMessage(lockedMs, "로그인"));
+    if (lockIfWrongMs > 0) throw lockedByThisAttempt(lockIfWrongMs, "로그인");
 
     throw unauthorized("이메일 또는 비밀번호가 올바르지 않습니다.");
   }
 
-  await clearThrottle(`login:email:${email}`);
+  await clearThrottle([keys.emailIp.key]);
+  await refundAttempts([keys.email, keys.ip]);
 
   const membership = await prisma.organizationMember.findFirst({
     where: { userId: user.id },
