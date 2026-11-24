@@ -1,16 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { apiFetch } from "@/lib/client-api";
 
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
 
-export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "register" }) {
+type Mode = "login" | "register";
+
+/** Login and signup share this screen; `?mode=register` in the URL picks signup. */
+export function LoginForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  // The URL is the source of truth, so the header's 로그인 / 무료로 시작 links switch the form
+  // even when they point at this same page.
+  const mode: Mode = useSearchParams().get("mode") === "register" ? "register" : "login";
+
+  function setMode(next: Mode) {
+    // Updates useSearchParams without a server round trip, and keeps what was typed.
+    window.history.replaceState(null, "", next === "register" ? "/login?mode=register" : "/login");
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
